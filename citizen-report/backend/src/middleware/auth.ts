@@ -1,0 +1,82 @@
+/**
+ * Authentication & authorization middleware.
+ * - requireAuth: verifies the Bearer access token and that tokenVersion matches.
+ * - optionalAuth: attaches the user if a valid token is present, else continues.
+ * - requireRole / requireVerified: coarse authorization guards.
+ */
+import { NextFunction, Request, Response } from 'express';
+import { Role } from '@prisma/client';
+import { verifyAccessToken } from '../lib/jwt';
+import { prisma } from '../lib/prisma';
+import { ApiError } from './error';
+
+export interface AuthUser {
+  id: string;
+  role: Role;
+  emailVerified: boolean;
+}
+
+// Augment Express Request with the authenticated user.
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace Express {
+    interface Request {
+      user?: AuthUser;
+    }
+  }
+}
+
+function extractToken(req: Request): string | null {
+  const header = req.headers.authorization;
+  if (header && header.startsWith('Bearer ')) return header.slice(7);
+  return null;
+}
+
+async function resolveUser(token: string): Promise<AuthUser | null> {
+  let payload;
+  try {
+    payload = verifyAccessToken(token);
+  } catch {
+    return null;
+  }
+  const user = await prisma.user.findUnique({
+    where: { id: payload.sub },
+    select: { id: true, role: true, emailVerified: true, tokenVersion: true },
+  });
+  // Reject tokens issued before the latest tokenVersion bump (logout/pw change).
+  if (!user || user.tokenVersion !== payload.tv) return null;
+  return { id: user.id, role: user.role, emailVerified: user.emailVerified };
+}
+
+export async function requireAuth(req: Request, _res: Response, next: NextFunction) {
+  const token = extractToken(req);
+  if (!token) return next(ApiError.unauthorized());
+  const user = await resolveUser(token);
+  if (!user) return next(ApiError.unauthorized('Invalid or expired token'));
+  req.user = user;
+  next();
+}
+
+export async function optionalAuth(req: Request, _res: Response, next: NextFunction) {
+  const token = extractToken(req);
+  if (token) {
+    const user = await resolveUser(token);
+    if (user) req.user = user;
+  }
+  next();
+}
+
+export function requireRole(...roles: Role[]) {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    if (!req.user) return next(ApiError.unauthorized());
+    if (!roles.includes(req.user.role)) return next(ApiError.forbidden());
+    next();
+  };
+}
+
+export function requireVerified(req: Request, _res: Response, next: NextFunction) {
+  if (!req.user) return next(ApiError.unauthorized());
+  if (!req.user.emailVerified)
+    return next(ApiError.forbidden('Email verification required for this action'));
+  next();
+}
