@@ -4,19 +4,30 @@
  * audited. NOTE: changing a report to APPROVED only forwards it for a human
  * enforcement decision — it never issues a penalty automatically.
  */
-import { Prisma, ReportStatus, Role, AuditAction } from '@prisma/client';
-import { prisma } from '../../lib/prisma';
+import type { FilterQuery } from 'mongoose';
+import {
+  ReportStatus,
+  Role,
+  AuditAction,
+  Report,
+  Category,
+  MediaAsset,
+  User,
+  AuditLog,
+  type IReport,
+  type IAuditLog,
+} from '../../models';
 import { ApiError } from '../../middleware/error';
 import { recordAudit } from '../../lib/audit';
 import type { Request } from 'express';
 
 // Allowed transitions. SUBMITTED can go to review/info/approve/reject; etc.
 const TRANSITIONS: Record<ReportStatus, ReportStatus[]> = {
-  SUBMITTED: ['UNDER_REVIEW', 'INFO_REQUESTED', 'APPROVED', 'REJECTED'],
-  UNDER_REVIEW: ['INFO_REQUESTED', 'APPROVED', 'REJECTED', 'CLOSED'],
-  INFO_REQUESTED: ['UNDER_REVIEW', 'APPROVED', 'REJECTED', 'CLOSED'],
-  APPROVED: ['CLOSED'],
-  REJECTED: ['CLOSED'],
+  SUBMITTED: ['UNDER_REVIEW', 'INFO_REQUESTED', 'APPROVED', 'REJECTED'] as ReportStatus[],
+  UNDER_REVIEW: ['INFO_REQUESTED', 'APPROVED', 'REJECTED', 'CLOSED'] as ReportStatus[],
+  INFO_REQUESTED: ['UNDER_REVIEW', 'APPROVED', 'REJECTED', 'CLOSED'] as ReportStatus[],
+  APPROVED: ['CLOSED'] as ReportStatus[],
+  REJECTED: ['CLOSED'] as ReportStatus[],
   CLOSED: [],
 };
 
@@ -43,33 +54,67 @@ interface ListFilters {
 }
 
 export async function listReports(f: ListFilters) {
-  const where: Prisma.ReportWhereInput = {};
+  const where: Record<string, unknown> = {};
   if (f.status) where.status = f.status;
-  if (f.categorySlug) where.category = { slug: f.categorySlug };
-  if (f.from || f.to) where.createdAt = { gte: f.from, lte: f.to };
-  if (f.minLat != null || f.maxLat != null) where.latitude = { gte: f.minLat, lte: f.maxLat };
-  if (f.minLng != null || f.maxLng != null) where.longitude = { gte: f.minLng, lte: f.maxLng };
-  if (f.q) where.description = { contains: f.q, mode: 'insensitive' };
+  if (f.categorySlug) {
+    // Category is a separate collection; resolve slug -> id first.
+    const category = await Category.findOne({ slug: f.categorySlug }).select('_id');
+    // No match -> ensure an empty result set rather than ignoring the filter.
+    where.categoryId = category ? category.id : '__no_such_category__';
+  }
+  if (f.from || f.to) {
+    const range: Record<string, Date> = {};
+    if (f.from) range.$gte = f.from;
+    if (f.to) range.$lte = f.to;
+    where.createdAt = range;
+  }
+  if (f.minLat != null || f.maxLat != null) {
+    const range: Record<string, number> = {};
+    if (f.minLat != null) range.$gte = f.minLat;
+    if (f.maxLat != null) range.$lte = f.maxLat;
+    where.latitude = range;
+  }
+  if (f.minLng != null || f.maxLng != null) {
+    const range: Record<string, number> = {};
+    if (f.minLng != null) range.$gte = f.minLng;
+    if (f.maxLng != null) range.$lte = f.maxLng;
+    where.longitude = range;
+  }
+  if (f.q) {
+    // Case-insensitive substring match (was Prisma `contains` + `mode: insensitive`).
+    where.description = { $regex: escapeRegex(f.q), $options: 'i' };
+  }
 
-  const [items, total] = await Promise.all([
-    prisma.report.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      skip: (f.page - 1) * f.pageSize,
-      take: f.pageSize,
-      include: {
-        category: true,
-        reporter: { select: { id: true, email: true, displayName: true } },
-        media: { select: { id: true, kind: true } },
-        _count: { select: { media: true } },
-      },
-    }),
-    prisma.report.count({ where }),
+  const filter = where as FilterQuery<IReport>;
+  const [docs, total] = await Promise.all([
+    Report.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((f.page - 1) * f.pageSize)
+      .limit(f.pageSize)
+      .populate('category')
+      .populate({ path: 'reporter', select: 'email displayName' }),
+    Report.countDocuments(filter),
   ]);
 
+  // Attach media summaries + counts (was `include.media` + `_count.media`).
+  const media = await MediaAsset.find({ reportId: { $in: docs.map((d) => d.id) } }).select(
+    'reportId kind',
+  );
+  const mediaByReport = new Map<string, { id: string; kind: string }[]>();
+  for (const m of media) {
+    const list = mediaByReport.get(m.reportId) ?? [];
+    list.push({ id: m.id, kind: m.kind });
+    mediaByReport.set(m.reportId, list);
+  }
+
   // Never leak encrypted contact in list view.
-  const sanitized = items.map(({ contactEnc, ...r }) => r);
-  return { items: sanitized, total, page: f.page, pageSize: f.pageSize };
+  const items = docs.map((d) => {
+    const { contactEnc, ...r } = d.toObject() as unknown as Record<string, unknown>;
+    void contactEnc;
+    const mediaList = mediaByReport.get(d.id) ?? [];
+    return { ...r, media: mediaList, _count: { media: mediaList.length } };
+  });
+  return { items, total, page: f.page, pageSize: f.pageSize };
 }
 
 export async function updateStatus(
@@ -79,7 +124,7 @@ export async function updateStatus(
   actorId: string,
   req: Request,
 ) {
-  const report = await prisma.report.findUnique({ where: { id: reportId } });
+  const report = await Report.findById(reportId);
   if (!report) throw ApiError.notFound('Report not found');
 
   const allowed = TRANSITIONS[report.status];
@@ -87,14 +132,15 @@ export async function updateStatus(
     throw ApiError.badRequest(`Cannot change status from ${report.status} to ${next}`);
   }
 
-  const updated = await prisma.report.update({
-    where: { id: reportId },
-    data: {
+  const updated = await Report.findByIdAndUpdate(
+    reportId,
+    {
       status: next,
-      reviewerNote: next === ReportStatus.INFO_REQUESTED ? note ?? report.reviewerNote : report.reviewerNote,
+      reviewerNote:
+        next === ReportStatus.INFO_REQUESTED ? note ?? report.reviewerNote : report.reviewerNote,
     },
-    include: { category: true },
-  });
+    { new: true },
+  ).populate('category');
 
   await recordAudit({
     action: ACTION_FOR_STATUS[next] ?? AuditAction.STATUS_CHANGED,
@@ -104,21 +150,24 @@ export async function updateStatus(
     req,
   });
 
-  const { contactEnc, ...safe } = updated;
+  const { contactEnc, ...safe } = (updated as NonNullable<typeof updated>).toObject() as unknown as Record<
+    string,
+    unknown
+  >;
   void contactEnc;
   return safe;
 }
 
 export async function changeUserRole(targetUserId: string, role: Role, actorId: string, req: Request) {
-  const user = await prisma.user.findUnique({ where: { id: targetUserId } });
+  const user = await User.findById(targetUserId);
   if (!user) throw ApiError.notFound('User not found');
 
-  const updated = await prisma.user.update({
-    where: { id: targetUserId },
-    // Bumping tokenVersion forces re-auth with the new role.
-    data: { role, tokenVersion: { increment: 1 } },
-    select: { id: true, email: true, role: true },
-  });
+  // Bumping tokenVersion forces re-auth with the new role.
+  const updated = await User.findByIdAndUpdate(
+    targetUserId,
+    { role, $inc: { tokenVersion: 1 } },
+    { new: true },
+  ).select('email role');
 
   await recordAudit({
     action: AuditAction.USER_ROLE_CHANGED,
@@ -135,28 +184,33 @@ export async function listAuditLogs(opts: {
   page: number;
   pageSize: number;
 }) {
-  const where: Prisma.AuditLogWhereInput = {};
+  const where: FilterQuery<IAuditLog> = {};
   if (opts.reportId) where.reportId = opts.reportId;
   if (opts.actorId) where.actorId = opts.actorId;
 
   const [items, total] = await Promise.all([
-    prisma.auditLog.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      skip: (opts.page - 1) * opts.pageSize,
-      take: opts.pageSize,
-      include: { actor: { select: { id: true, email: true, role: true } } },
-    }),
-    prisma.auditLog.count({ where }),
+    AuditLog.find(where)
+      .sort({ createdAt: -1 })
+      .skip((opts.page - 1) * opts.pageSize)
+      .limit(opts.pageSize)
+      .populate({ path: 'actor', select: 'email role' }),
+    AuditLog.countDocuments(where),
   ]);
   return { items, total, page: opts.page, pageSize: opts.pageSize };
 }
 
 export async function stats() {
-  const byStatus = await prisma.report.groupBy({ by: ['status'], _count: true });
-  const total = await prisma.report.count();
+  const byStatusRows = await Report.aggregate<{ _id: ReportStatus; count: number }>([
+    { $group: { _id: '$status', count: { $sum: 1 } } },
+  ]);
+  const total = await Report.countDocuments();
   return {
     total,
-    byStatus: Object.fromEntries(byStatus.map((s) => [s.status, s._count])),
+    byStatus: Object.fromEntries(byStatusRows.map((s) => [s._id, s.count])),
   };
+}
+
+/** Escape user input before embedding it in a regular expression. */
+function escapeRegex(input: string): string {
+  return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

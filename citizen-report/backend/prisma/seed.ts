@@ -2,10 +2,9 @@
  * Seeds default report categories and an initial admin account.
  * Idempotent — safe to run repeatedly. Run with: npm run seed
  */
-import { PrismaClient, Role } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-
-const prisma = new PrismaClient();
+import { Role, Category, User } from '../src/models';
+import { connectMongo, disconnectMongo } from '../src/lib/mongoose';
 
 const CATEGORIES = [
   { slug: 'illegal_parking', name: 'Illegal parking', description: 'Vehicles parked in violation of traffic rules.' },
@@ -19,13 +18,15 @@ const CATEGORIES = [
 ];
 
 async function main() {
+  await connectMongo();
+
   // Categories
   for (const c of CATEGORIES) {
-    await prisma.category.upsert({
-      where: { slug: c.slug },
-      update: { name: c.name, description: c.description },
-      create: c,
-    });
+    await Category.updateOne(
+      { slug: c.slug },
+      { $set: { name: c.name, description: c.description }, $setOnInsert: { slug: c.slug } },
+      { upsert: true },
+    );
   }
   console.log(`Seeded ${CATEGORIES.length} categories.`);
 
@@ -34,17 +35,19 @@ async function main() {
   const password = process.env.SEED_ADMIN_PASSWORD || 'ChangeMe!2024';
   const passwordHash = await bcrypt.hash(password, 12);
 
-  await prisma.user.upsert({
-    where: { email },
-    update: {},
-    create: {
-      email,
-      passwordHash,
-      displayName: 'System Administrator',
-      role: Role.ADMIN,
-      emailVerified: true,
+  await User.updateOne(
+    { email },
+    {
+      $setOnInsert: {
+        email,
+        passwordHash,
+        displayName: 'System Administrator',
+        role: Role.ADMIN,
+        emailVerified: true,
+      },
     },
-  });
+    { upsert: true },
+  );
   console.log(`Seeded admin: ${email}`);
   console.log('⚠️  Change the admin password immediately in production.');
 }
@@ -55,5 +58,5 @@ main()
     process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    await disconnectMongo();
   });

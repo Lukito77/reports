@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Role } from '@prisma/client';
+import { Role } from '../../models/enums';
 import { ApiError } from '../../middleware/error';
 import * as service from './reports.service';
 

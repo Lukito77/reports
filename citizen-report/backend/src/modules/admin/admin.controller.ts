@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
-import { ReportStatus } from '@prisma/client';
+import { ReportStatus, AuditAction } from '../../models/enums';
 import { ApiError } from '../../middleware/error';
 import { recordAudit } from '../../lib/audit';
-import { AuditAction } from '@prisma/client';
 import * as service from './admin.service';
 import * as reportService from '../reports/reports.service';
 

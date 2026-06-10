@@ -5,9 +5,8 @@
  * - requireRole / requireVerified: coarse authorization guards.
  */
 import { NextFunction, Request, Response } from 'express';
-import { Role } from '@prisma/client';
+import { Role, User } from '../models';
 import { verifyAccessToken } from '../lib/jwt';
-import { prisma } from '../lib/prisma';
 import { ApiError } from './error';
 
 export interface AuthUser {
@@ -39,10 +38,7 @@ async function resolveUser(token: string): Promise<AuthUser | null> {
   } catch {
     return null;
   }
-  const user = await prisma.user.findUnique({
-    where: { id: payload.sub },
-    select: { id: true, role: true, emailVerified: true, tokenVersion: true },
-  });
+  const user = await User.findById(payload.sub).select('role emailVerified tokenVersion');
   // Reject tokens issued before the latest tokenVersion bump (logout/pw change).
   if (!user || user.tokenVersion !== payload.tv) return null;
   return { id: user.id, role: user.role, emailVerified: user.emailVerified };

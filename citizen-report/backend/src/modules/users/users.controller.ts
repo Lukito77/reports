@@ -1,23 +1,14 @@
 import { Request, Response } from 'express';
-import { prisma } from '../../lib/prisma';
 import { ApiError } from '../../middleware/error';
 import { recordAudit } from '../../lib/audit';
-import { AuditAction } from '@prisma/client';
+import { AuditAction, User, Report, RefreshToken, MediaAsset } from '../../models';
 
 /** Current user's profile. */
 export async function me(req: Request, res: Response) {
   if (!req.user) throw ApiError.unauthorized();
-  const user = await prisma.user.findUnique({
-    where: { id: req.user.id },
-    select: {
-      id: true,
-      email: true,
-      displayName: true,
-      role: true,
-      emailVerified: true,
-      createdAt: true,
-    },
-  });
+  const user = await User.findById(req.user.id).select(
+    'email displayName role emailVerified createdAt',
+  );
   res.json({ user });
 }
 
@@ -27,13 +18,25 @@ export async function me(req: Request, res: Response) {
  */
 export async function exportData(req: Request, res: Response) {
   if (!req.user) throw ApiError.unauthorized();
-  const user = await prisma.user.findUnique({
-    where: { id: req.user.id },
-    select: { id: true, email: true, displayName: true, role: true, createdAt: true },
+  const user = await User.findById(req.user.id).select('email displayName role createdAt');
+
+  const reportDocs = await Report.find({ reporterId: req.user.id }).populate({
+    path: 'category',
+    select: '-_id slug name',
   });
-  const reports = await prisma.report.findMany({
-    where: { reporterId: req.user.id },
-    include: { category: { select: { slug: true, name: true } }, media: { select: { id: true, kind: true, mimeType: true, createdAt: true } } },
+  const media = await MediaAsset.find({ reportId: { $in: reportDocs.map((r) => r.id) } }).select(
+    'reportId kind mimeType createdAt',
+  );
+  const mediaByReport = new Map<string, Record<string, unknown>[]>();
+  for (const m of media) {
+    const list = mediaByReport.get(m.reportId) ?? [];
+    list.push({ id: m.id, kind: m.kind, mimeType: m.mimeType, createdAt: m.createdAt });
+    mediaByReport.set(m.reportId, list);
+  }
+  const reports = reportDocs.map((r) => {
+    const obj = r.toObject() as unknown as Record<string, unknown>;
+    obj.media = mediaByReport.get(r.id) ?? [];
+    return obj;
   });
 
   await recordAudit({ action: AuditAction.DATA_EXPORTED, actorId: req.user.id, req });
@@ -49,17 +52,15 @@ export async function eraseAccount(req: Request, res: Response) {
   if (!req.user) throw ApiError.unauthorized();
   const userId = req.user.id;
 
-  await prisma.$transaction([
-    // Detach reports from the person; mark anonymous and clear encrypted contact.
-    prisma.report.updateMany({
-      where: { reporterId: userId },
-      data: { reporterId: null, anonymous: true, contactEnc: null },
-    }),
-    prisma.refreshToken.deleteMany({ where: { userId } }),
-  ]);
+  // Detach reports from the person; mark anonymous and clear encrypted contact.
+  await Report.updateMany(
+    { reporterId: userId },
+    { reporterId: null, anonymous: true, contactEnc: null },
+  );
+  await RefreshToken.deleteMany({ userId });
 
   await recordAudit({ action: AuditAction.DATA_ERASED, actorId: null, metadata: { erasedUserId: userId }, req });
-  await prisma.user.delete({ where: { id: userId } });
+  await User.deleteOne({ _id: userId });
 
   res.clearCookie('crp_refresh', { path: '/api/auth' });
   res.json({ message: 'Account erased. Your reports have been anonymized.' });

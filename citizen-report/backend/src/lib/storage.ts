@@ -1,53 +1,77 @@
 /**
- * S3-compatible object storage (AWS S3 / MinIO / R2).
- * Media is stored in a PRIVATE bucket; consumers receive short-lived signed URLs only.
+ * Cloudinary object storage. Media is uploaded as `authenticated` (private):
+ * it is only reachable through short-lived signed delivery URLs, mirroring the
+ * old private-S3-bucket + presigned-URL model. All assets live under the
+ * `citizen-report` folder.
  */
-import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-  DeleteObjectCommand,
-} from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { v2 as cloudinary } from 'cloudinary';
 import { v4 as uuid } from 'uuid';
 import { env } from '../config/env';
 
-const s3 = new S3Client({
-  endpoint: env.S3_ENDPOINT,
-  region: env.S3_REGION,
-  forcePathStyle: env.S3_FORCE_PATH_STYLE,
-  credentials: {
-    accessKeyId: env.S3_ACCESS_KEY,
-    secretAccessKey: env.S3_SECRET_KEY,
-  },
+cloudinary.config({
+  cloud_name: env.CLOUDINARY_CLOUD_NAME,
+  api_key: env.CLOUDINARY_API_KEY,
+  api_secret: env.CLOUDINARY_API_SECRET,
+  secure: true,
 });
 
-/** Random, opaque object key — original filenames are never used. */
+export const CLOUDINARY_FOLDER = 'citizen-report';
+
+export type ResourceType = 'image' | 'video';
+
+/** Fully-qualified Cloudinary public_id (folder-prefixed). */
+function publicId(key: string): string {
+  return `${CLOUDINARY_FOLDER}/${key}`;
+}
+
+function resourceTypeFor(contentType: string): ResourceType {
+  return contentType.startsWith('video/') ? 'video' : 'image';
+}
+
+/** Random, opaque storage key — original filenames are never used. */
 export function newStorageKey(prefix: string, ext: string): string {
   const safeExt = ext.replace(/[^a-z0-9]/gi, '').slice(0, 5) || 'bin';
-  return `${prefix}/${uuid()}.${safeExt}`;
+  // Kept in the key for traceability; Cloudinary tracks the real format itself.
+  return `${prefix}/${uuid()}-${safeExt}`;
 }
 
+/** Upload a buffer to the private `citizen-report` folder under `key`. */
 export async function putObject(key: string, body: Buffer, contentType: string): Promise<void> {
-  await s3.send(
-    new PutObjectCommand({
-      Bucket: env.S3_BUCKET,
-      Key: key,
-      Body: body,
-      ContentType: contentType,
-      // Defense in depth: enforce private even if bucket policy drifts.
-      ACL: undefined,
-    }),
-  );
-}
-
-/** Time-limited signed GET URL for viewing private media. */
-export async function getSignedDownloadUrl(key: string): Promise<string> {
-  return getSignedUrl(s3, new GetObjectCommand({ Bucket: env.S3_BUCKET, Key: key }), {
-    expiresIn: env.SIGNED_URL_TTL_SECONDS,
+  const resource_type = resourceTypeFor(contentType);
+  await new Promise<void>((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        public_id: publicId(key),
+        resource_type,
+        // Private delivery: requires a signed URL to view.
+        type: 'authenticated',
+        overwrite: true,
+      },
+      (err) => (err ? reject(err) : resolve()),
+    );
+    stream.end(body);
   });
 }
 
-export async function deleteObject(key: string): Promise<void> {
-  await s3.send(new DeleteObjectCommand({ Bucket: env.S3_BUCKET, Key: key }));
+/** Signed delivery URL for viewing private media. */
+export async function getSignedDownloadUrl(
+  key: string,
+  resourceType: ResourceType = 'image',
+): Promise<string> {
+  return cloudinary.url(publicId(key), {
+    resource_type: resourceType,
+    type: 'authenticated',
+    sign_url: true,
+    secure: true,
+  });
+}
+
+export async function deleteObject(
+  key: string,
+  resourceType: ResourceType = 'image',
+): Promise<void> {
+  await cloudinary.uploader.destroy(publicId(key), {
+    resource_type: resourceType,
+    type: 'authenticated',
+  });
 }

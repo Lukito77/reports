@@ -6,8 +6,20 @@
 import crypto from 'crypto';
 import exifr from 'exifr';
 import sharp from 'sharp';
-import { MediaKind, Prisma, ReportStatus, Role, AuditAction } from '@prisma/client';
-import { prisma } from '../../lib/prisma';
+import type { FilterQuery } from 'mongoose';
+import {
+  MediaKind,
+  ReportStatus,
+  Role,
+  AuditAction,
+  AiAnalysisType,
+  Report,
+  MediaAsset,
+  AiAnalysis,
+  ConsentRecord,
+  Category,
+  type IReport,
+} from '../../models';
 import { ApiError } from '../../middleware/error';
 import { encrypt, decrypt } from '../../lib/crypto';
 import {
@@ -44,6 +56,15 @@ interface IngestedMedia {
     tamper?: ai.TamperResult;
     facesBlurred?: number;
   };
+}
+
+interface AiAnalysisRow {
+  reportId: string;
+  mediaId?: string;
+  type: AiAnalysisType;
+  result: unknown;
+  confidence?: number;
+  provider?: string;
 }
 
 /** Process one uploaded file: verify type, extract EXIF, blur faces, hash, store. */
@@ -112,7 +133,7 @@ export async function createReport(
     throw ApiError.badRequest('At least one photo is required as evidence');
   }
 
-  const category = await prisma.category.findUnique({ where: { slug: input.categorySlug } });
+  const category = await Category.findOne({ slug: input.categorySlug });
   if (!category || !category.active) throw ApiError.badRequest('Invalid category');
 
   // Anonymous unless explicitly logged in AND not requesting anonymity.
@@ -135,57 +156,57 @@ export async function createReport(
     mediaCount: ingested.length,
   });
 
-  const report = await prisma.report.create({
-    data: {
-      reporterId: anonymous ? null : ctx.userId,
-      anonymous,
-      contactEnc: encrypt(input.contact ?? null),
-      categoryId: category.id,
-      description: input.description,
-      summary,
-      latitude,
-      longitude,
-      address: input.address,
-      incidentAt,
-      consentGiven: true,
-      status: ReportStatus.SUBMITTED,
-      media: {
-        create: ingested.map((m) => ({
-          kind: m.kind,
-          storageKey: m.storageKey,
-          processedKey: m.processedKey,
-          mimeType: m.mimeType,
-          sizeBytes: m.sizeBytes,
-          width: m.width,
-          height: m.height,
-          exifLat: m.exifLat,
-          exifLng: m.exifLng,
-          exifTakenAt: m.exifTakenAt,
-          sha256: m.sha256,
-        })),
-      },
-      consent: {
-        create: {
-          policyVersion: input.policyVersion,
-          consentText: input.consentText ?? 'Standard consent notice accepted.',
-          ip: ctx.ip,
-          userAgent: ctx.userAgent?.slice(0, 512),
-        },
-      },
-    },
-    include: { media: true, category: true },
+  const report = await Report.create({
+    reporterId: anonymous ? null : ctx.userId,
+    anonymous,
+    contactEnc: encrypt(input.contact ?? null),
+    categoryId: category.id,
+    description: input.description,
+    summary,
+    latitude,
+    longitude,
+    address: input.address,
+    incidentAt,
+    consentGiven: true,
+    status: ReportStatus.SUBMITTED,
+  });
+
+  // Media + consent live in their own collections (was a nested Prisma create).
+  const mediaDocs = await MediaAsset.insertMany(
+    ingested.map((m) => ({
+      reportId: report.id,
+      kind: m.kind,
+      storageKey: m.storageKey,
+      processedKey: m.processedKey,
+      mimeType: m.mimeType,
+      sizeBytes: m.sizeBytes,
+      width: m.width,
+      height: m.height,
+      exifLat: m.exifLat,
+      exifLng: m.exifLng,
+      exifTakenAt: m.exifTakenAt,
+      sha256: m.sha256,
+    })),
+  );
+
+  await ConsentRecord.create({
+    reportId: report.id,
+    policyVersion: input.policyVersion,
+    consentText: input.consentText ?? 'Standard consent notice accepted.',
+    ip: ctx.ip,
+    userAgent: ctx.userAgent?.slice(0, 512),
   });
 
   // Persist AI analyses (advisory).
-  const aiRows: Prisma.AiAnalysisCreateManyInput[] = [];
-  report.media.forEach((dbMedia, i) => {
+  const aiRows: AiAnalysisRow[] = [];
+  mediaDocs.forEach((dbMedia, i) => {
     const m = ingested[i];
     if (m.ai.plates && m.ai.plates.plates.length > 0) {
       aiRows.push({
         reportId: report.id,
         mediaId: dbMedia.id,
-        type: 'PLATE_OCR',
-        result: m.ai.plates.plates as unknown as Prisma.InputJsonValue,
+        type: AiAnalysisType.PLATE_OCR,
+        result: m.ai.plates.plates,
         provider: m.ai.plates.provider,
       });
     }
@@ -193,8 +214,8 @@ export async function createReport(
       aiRows.push({
         reportId: report.id,
         mediaId: dbMedia.id,
-        type: 'TAMPER_DETECTION',
-        result: m.ai.tamper as unknown as Prisma.InputJsonValue,
+        type: AiAnalysisType.TAMPER_DETECTION,
+        result: m.ai.tamper,
         confidence: m.ai.tamper.score,
         provider: m.ai.tamper.provider,
       });
@@ -203,17 +224,17 @@ export async function createReport(
       aiRows.push({
         reportId: report.id,
         mediaId: dbMedia.id,
-        type: 'FACE_BLUR',
-        result: { facesBlurred: m.ai.facesBlurred } as Prisma.InputJsonValue,
+        type: AiAnalysisType.FACE_BLUR,
+        result: { facesBlurred: m.ai.facesBlurred },
       });
     }
   });
   aiRows.push({
     reportId: report.id,
-    type: 'SUMMARY',
-    result: { summary } as Prisma.InputJsonValue,
+    type: AiAnalysisType.SUMMARY,
+    result: { summary },
   });
-  if (aiRows.length) await prisma.aiAnalysis.createMany({ data: aiRows });
+  if (aiRows.length) await AiAnalysis.insertMany(aiRows);
 
   await recordAudit({
     action: AuditAction.REPORT_CREATED,
@@ -222,34 +243,58 @@ export async function createReport(
     metadata: { anonymous, category: category.slug, mediaCount: ingested.length },
   });
 
-  return sanitizeReport(report);
+  // Mirror Prisma's `include: { media: true, category: true }`.
+  const result = report.toObject() as unknown as Record<string, unknown>;
+  result.category = category.toObject();
+  result.media = mediaDocs.map((d) => d.toObject());
+  return sanitizeReport(result);
 }
 
 /** Strip sensitive fields from a report before returning to a citizen. */
 function sanitizeReport(report: { contactEnc?: string | null; [k: string]: unknown }) {
   const { contactEnc, ...rest } = report;
+  void contactEnc;
   return rest;
+}
+
+/** Fetch `{ id, kind }` media summaries grouped by report id. */
+async function mediaSummariesByReport(
+  reportIds: string[],
+): Promise<Map<string, { id: string; kind: MediaKind }[]>> {
+  const media = await MediaAsset.find({ reportId: { $in: reportIds } }).select('reportId kind');
+  const byReport = new Map<string, { id: string; kind: MediaKind }[]>();
+  for (const m of media) {
+    const list = byReport.get(m.reportId) ?? [];
+    list.push({ id: m.id, kind: m.kind });
+    byReport.set(m.reportId, list);
+  }
+  return byReport;
 }
 
 export async function listMyReports(
   userId: string,
   opts: { status?: ReportStatus; page: number; pageSize: number },
 ) {
-  const where: Prisma.ReportWhereInput = { reporterId: userId };
+  const where: FilterQuery<IReport> = { reporterId: userId };
   if (opts.status) where.status = opts.status;
 
-  const [items, total] = await Promise.all([
-    prisma.report.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      skip: (opts.page - 1) * opts.pageSize,
-      take: opts.pageSize,
-      include: { category: true, media: { select: { id: true, kind: true } } },
-    }),
-    prisma.report.count({ where }),
+  const [docs, total] = await Promise.all([
+    Report.find(where)
+      .sort({ createdAt: -1 })
+      .skip((opts.page - 1) * opts.pageSize)
+      .limit(opts.pageSize)
+      .populate('category'),
+    Report.countDocuments(where),
   ]);
 
-  return { items: items.map(sanitizeReport), total, page: opts.page, pageSize: opts.pageSize };
+  const mediaByReport = await mediaSummariesByReport(docs.map((d) => d.id));
+  const items = docs.map((d) => {
+    const obj = d.toObject() as unknown as Record<string, unknown>;
+    obj.media = mediaByReport.get(d.id) ?? [];
+    return sanitizeReport(obj);
+  });
+
+  return { items, total, page: opts.page, pageSize: opts.pageSize };
 }
 
 /**
@@ -260,19 +305,24 @@ export async function getReport(
   id: string,
   viewer: { id: string; role: Role },
 ) {
-  const report = await prisma.report.findUnique({
-    where: { id },
-    include: { category: true, media: true, aiAnalyses: true },
-  });
+  const report = await Report.findById(id).populate('category');
   if (!report) throw ApiError.notFound('Report not found');
 
   const isStaff = viewer.role === Role.ADMIN || viewer.role === Role.MODERATOR;
   if (!isStaff && report.reporterId !== viewer.id) throw ApiError.forbidden();
 
+  const [mediaDocs, aiDocs] = await Promise.all([
+    MediaAsset.find({ reportId: id }),
+    AiAnalysis.find({ reportId: id }),
+  ]);
+
   // Build signed URLs. Citizens see only the processed (blurred) derivative.
   const media = await Promise.all(
-    report.media.map(async (m) => {
+    mediaDocs.map(async (m) => {
       const viewKey = isStaff ? m.storageKey : m.processedKey ?? m.storageKey;
+      // The processed derivative is always an image; originals may be video.
+      const resourceType =
+        viewKey === m.processedKey ? 'image' : m.kind === MediaKind.VIDEO ? 'video' : 'image';
       return {
         id: m.id,
         kind: m.kind,
@@ -282,46 +332,56 @@ export async function getReport(
         exifLat: isStaff ? m.exifLat : undefined,
         exifLng: isStaff ? m.exifLng : undefined,
         exifTakenAt: m.exifTakenAt,
-        url: await getSignedDownloadUrl(viewKey),
+        url: await getSignedDownloadUrl(viewKey, resourceType),
       };
     }),
   );
 
   // Decrypt plate text only for staff.
-  const aiAnalyses = report.aiAnalyses.map((a) => {
-    if (a.type === 'PLATE_OCR' && isStaff && Array.isArray(a.result)) {
+  const aiAnalyses = aiDocs.map((doc) => {
+    const a = doc.toObject();
+    if (a.type === AiAnalysisType.PLATE_OCR && isStaff && Array.isArray(a.result)) {
       const plates = (a.result as { textEncrypted: string; confidence: number }[]).map((p) => ({
         text: decrypt(p.textEncrypted),
         confidence: p.confidence,
       }));
       return { ...a, result: plates };
     }
-    if (a.type === 'PLATE_OCR' && !isStaff) {
+    if (a.type === AiAnalysisType.PLATE_OCR && !isStaff) {
       return { ...a, result: { redacted: true } };
     }
     return a;
   });
 
-  return { ...sanitizeReport(report), media, aiAnalyses };
+  return {
+    ...sanitizeReport(report.toObject() as unknown as Record<string, unknown>),
+    media,
+    aiAnalyses,
+  };
 }
 
 /** Public list of categories for the submission form. */
 export function listCategories() {
-  return prisma.category.findMany({
-    where: { active: true },
-    select: { slug: true, name: true, description: true },
-    orderBy: { name: 'asc' },
-  });
+  return Category.find({ active: true })
+    .select('-_id slug name description')
+    .sort({ name: 1 })
+    .lean();
 }
 
 /** Permanently delete a report and its media objects (GDPR erasure / retention). */
 export async function hardDeleteReport(id: string) {
-  const media = await prisma.mediaAsset.findMany({ where: { reportId: id } });
+  const media = await MediaAsset.find({ reportId: id });
   await Promise.allSettled(
     media.flatMap((m) => [
-      deleteObject(m.storageKey),
-      m.processedKey ? deleteObject(m.processedKey) : Promise.resolve(),
+      deleteObject(m.storageKey, m.kind === MediaKind.VIDEO ? 'video' : 'image'),
+      m.processedKey ? deleteObject(m.processedKey, 'image') : Promise.resolve(),
     ]),
   );
-  await prisma.report.delete({ where: { id } });
+  // Cascade the dependent collections (Prisma did this via onDelete: Cascade).
+  await Promise.all([
+    MediaAsset.deleteMany({ reportId: id }),
+    AiAnalysis.deleteMany({ reportId: id }),
+    ConsentRecord.deleteMany({ reportId: id }),
+  ]);
+  await Report.deleteOne({ _id: id });
 }

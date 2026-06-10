@@ -3,7 +3,7 @@
  * an uploaded image during review). Advisory only — results never drive enforcement.
  */
 import { Router } from 'express';
-import { Role } from '@prisma/client';
+import { Role } from '../../models/enums';
 import { requireAuth, requireRole } from '../../middleware/auth';
 import { upload, assertRealFileType } from '../../middleware/upload';
 import { ApiError } from '../../middleware/error';

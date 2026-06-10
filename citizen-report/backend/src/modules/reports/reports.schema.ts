@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ReportStatus } from '@prisma/client';
+import { ReportStatus } from '../../models/enums';
 
 // Multipart fields arrive as strings; coerce/validate explicitly.
 export const createReportSchema = z.object({

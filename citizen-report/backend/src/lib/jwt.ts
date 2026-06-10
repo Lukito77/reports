@@ -5,7 +5,7 @@
  */
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { env } from '../config/env';
-import { Role } from '@prisma/client';
+import { Role } from '../models/enums';
 
 export interface AccessTokenPayload {
   sub: string; // user id

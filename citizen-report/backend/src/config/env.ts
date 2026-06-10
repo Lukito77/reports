@@ -17,7 +17,7 @@ const schema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(4000),
 
-  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
+  MONGODB_URI: z.string().min(1, 'MONGODB_URI is required'),
 
   JWT_ACCESS_SECRET: z.string().min(16, 'JWT_ACCESS_SECRET must be at least 16 chars'),
   JWT_REFRESH_SECRET: z.string().min(16, 'JWT_REFRESH_SECRET must be at least 16 chars'),
@@ -34,13 +34,10 @@ const schema = z.object({
 
   CORS_ORIGIN: z.string().default('http://localhost:3000'),
 
-  S3_ENDPOINT: z.string().min(1),
-  S3_REGION: z.string().default('us-east-1'),
-  S3_BUCKET: z.string().min(1),
-  S3_ACCESS_KEY: z.string().min(1),
-  S3_SECRET_KEY: z.string().min(1),
-  S3_FORCE_PATH_STYLE: boolish(true),
-  SIGNED_URL_TTL_SECONDS: z.coerce.number().default(300),
+  // Cloudinary (private media storage + signed delivery URLs).
+  CLOUDINARY_CLOUD_NAME: z.string().min(1, 'CLOUDINARY_CLOUD_NAME is required'),
+  CLOUDINARY_API_KEY: z.string().min(1, 'CLOUDINARY_API_KEY is required'),
+  CLOUDINARY_API_SECRET: z.string().min(1, 'CLOUDINARY_API_SECRET is required'),
 
   MAX_UPLOAD_MB: z.coerce.number().default(25),
   MAX_FILES_PER_REPORT: z.coerce.number().default(8),

@@ -3,21 +3,20 @@
  * older than DATA_RETENTION_DAYS that are in a terminal state (CLOSED/REJECTED).
  * Run on a schedule (cron / k8s CronJob): npm run purge:expired
  */
-import { ReportStatus } from '@prisma/client';
-import { prisma } from '../lib/prisma';
+import { ReportStatus, Report } from '../models';
+import { connectMongo, disconnectMongo } from '../lib/mongoose';
 import { env } from '../config/env';
 import { logger } from '../lib/logger';
 import { hardDeleteReport } from '../modules/reports/reports.service';
 
 async function main() {
+  await connectMongo();
+
   const cutoff = new Date(Date.now() - env.DATA_RETENTION_DAYS * 24 * 60 * 60 * 1000);
-  const expired = await prisma.report.findMany({
-    where: {
-      updatedAt: { lt: cutoff },
-      status: { in: [ReportStatus.CLOSED, ReportStatus.REJECTED] },
-    },
-    select: { id: true },
-  });
+  const expired = await Report.find({
+    updatedAt: { $lt: cutoff },
+    status: { $in: [ReportStatus.CLOSED, ReportStatus.REJECTED] },
+  }).select('_id');
 
   logger.info(`Retention purge: ${expired.length} report(s) older than ${env.DATA_RETENTION_DAYS} days`);
   for (const r of expired) {
@@ -36,5 +35,5 @@ main()
     process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    await disconnectMongo();
   });

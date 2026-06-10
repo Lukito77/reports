@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ReportStatus, Role } from '@prisma/client';
+import { ReportStatus, Role } from '../../models/enums';
 
 export const listReportsSchema = z.object({
   status: z.nativeEnum(ReportStatus).optional(),

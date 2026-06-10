@@ -11,7 +11,7 @@ import swaggerUi from 'swagger-ui-express';
 
 import { env } from './config/env';
 import { logger } from './lib/logger';
-import { prisma } from './lib/prisma';
+import { mongoose } from './lib/mongoose';
 import { globalLimiter } from './middleware/rateLimit';
 import { errorHandler, notFoundHandler } from './middleware/error';
 import { openapiSpec } from './docs/openapi';
@@ -60,7 +60,9 @@ export function createApp() {
   // Health / readiness.
   app.get('/api/health', async (_req, res) => {
     try {
-      await prisma.$queryRaw`SELECT 1`;
+      const db = mongoose.connection.db;
+      if (mongoose.connection.readyState !== 1 || !db) throw new Error('not connected');
+      await db.admin().ping();
       res.json({ status: 'ok', time: new Date().toISOString() });
     } catch {
       res.status(503).json({ status: 'degraded', reason: 'database unavailable' });
