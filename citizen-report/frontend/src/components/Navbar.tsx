@@ -3,10 +3,12 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
+import { useI18n } from '@/lib/i18n';
 
 export function Navbar() {
   const { user, logout, loading } = useAuth();
   const router = useRouter();
+  const { lang, setLang, t } = useI18n();
   const isStaff = user?.role === 'ADMIN' || user?.role === 'MODERATOR';
 
   return (
@@ -18,7 +20,7 @@ export function Navbar() {
 
         <div className="flex items-center gap-3 text-sm">
           <Link href="/report" className="btn-primary">
-            Report an issue
+            {t.nav.reportIssue}
           </Link>
 
           {loading ? null : user ? (
@@ -40,19 +42,27 @@ export function Navbar() {
                 }}
                 className="btn-secondary"
               >
-                Log out
+                {lang === 'ka' ? 'გამოსვლა' : 'Log out'}
               </button>
             </>
           ) : (
             <>
               <Link href="/login" className="text-slate-600 hover:text-slate-900">
-                Log in
+                {t.nav.login}
               </Link>
               <Link href="/register" className="btn-secondary">
-                Sign up
+                {t.nav.signup}
               </Link>
             </>
           )}
+
+          {/* ენის გადართვა */}
+          <button
+            onClick={() => setLang(lang === 'ka' ? 'en' : 'ka')}
+            className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
+          >
+            {lang === 'ka' ? '🇬🇧 EN' : '🇬🇪 KA'}
+          </button>
         </div>
       </nav>
     </header>

@@ -4,9 +4,11 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { ApiError } from '@/lib/api';
+import { useI18n } from '@/lib/i18n';
 
 export default function RegisterPage() {
   const { register } = useAuth();
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
@@ -33,9 +35,13 @@ export default function RegisterPage() {
       <div className="mx-auto max-w-md">
         <div className="card text-center">
           <div className="mb-3 text-4xl">📧</div>
-          <h1 className="mb-2 text-xl font-bold">Check your email</h1>
+          <h1 className="mb-2 text-xl font-bold">
+            {t.register.title}
+          </h1>
           <p className="text-sm text-slate-600">{done}</p>
-          <Link href="/login" className="btn-secondary mt-4">Go to sign in</Link>
+          <Link href="/login" className="btn-secondary mt-4">
+            {t.login.submit}
+          </Link>
         </div>
       </div>
     );
@@ -44,34 +50,32 @@ export default function RegisterPage() {
   return (
     <div className="mx-auto max-w-md">
       <div className="card">
-        <h1 className="mb-1 text-2xl font-bold">Create an account</h1>
-        <p className="mb-6 text-sm text-slate-600">
-          Track your reports and their status. You can also report anonymously without an account.
-        </p>
+        <h1 className="mb-1 text-2xl font-bold">{t.register.title}</h1>
+        <p className="mb-6 text-sm text-slate-600">{t.register.subtitle}</p>
         <form onSubmit={submit} className="space-y-4">
           <div>
-            <label className="label" htmlFor="name">Display name (optional)</label>
+            <label className="label" htmlFor="name">{t.register.displayName}</label>
             <input id="name" className="input" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
           </div>
           <div>
-            <label className="label" htmlFor="email">Email</label>
+            <label className="label" htmlFor="email">{t.register.email}</label>
             <input id="email" type="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           <div>
-            <label className="label" htmlFor="password">Password</label>
+            <label className="label" htmlFor="password">{t.register.password}</label>
             <input id="password" type="password" className="input" value={password} onChange={(e) => setPassword(e.target.value)} required />
-            <p className="mt-1 text-xs text-slate-500">
-              At least 10 characters, with upper &amp; lower case letters and a number.
-            </p>
+            <p className="mt-1 text-xs text-slate-500">{t.register.passwordHint}</p>
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button type="submit" className="btn-primary w-full" disabled={busy}>
-            {busy ? 'Creating…' : 'Create account'}
+            {busy ? '...' : t.register.createAccount}
           </button>
         </form>
         <p className="mt-4 text-center text-sm text-slate-600">
-          Already have an account?{' '}
-          <Link href="/login" className="text-brand-600 hover:underline">Sign in</Link>
+          {t.register.alreadyHave}{' '}
+          <Link href="/login" className="text-brand-600 hover:underline">
+            {t.register.signIn}
+          </Link>
         </p>
       </div>
     </div>

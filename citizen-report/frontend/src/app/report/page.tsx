@@ -10,7 +10,6 @@ import { ConsentNotice, CONSENT_TEXT } from '@/components/ConsentNotice';
 import type { Category } from '@/lib/types';
 import type { LatLng } from '@/components/MapPicker';
 
-// Leaflet needs the browser — load the map only on the client.
 const MapPicker = dynamic(() => import('@/components/MapPicker'), {
   ssr: false,
   loading: () => <div className="h-80 animate-pulse rounded-lg bg-slate-100" />,
@@ -43,10 +42,9 @@ export default function ReportPage() {
         setCategories(d.categories);
         if (d.categories[0]) setCategorySlug(d.categories[0].slug);
       })
-      .catch(() => setError('Could not load categories. Is the API running?'));
+      .catch(() => setError('კატეგორიების ჩატვირთვა ვერ მოხერხდა. API მუშაობს?'));
   }, []);
 
-  // Logged-in users default to attributed submission.
   useEffect(() => {
     if (user) setAnonymous(false);
   }, [user]);
@@ -84,7 +82,7 @@ export default function ReportPage() {
       setDone(res.message);
       if (user) setTimeout(() => router.push('/dashboard'), 1500);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Submission failed. Please try again.');
+      setError(err instanceof ApiError ? err.message : 'გაგზავნა ვერ მოხერხდა. გთხოვთ, სცადოთ თავიდან.');
     } finally {
       setSubmitting(false);
     }
@@ -95,10 +93,10 @@ export default function ReportPage() {
       <div className="mx-auto max-w-lg">
         <div className="card text-center">
           <div className="mb-3 text-5xl">✅</div>
-          <h1 className="mb-2 text-xl font-bold">Report submitted</h1>
+          <h1 className="mb-2 text-xl font-bold">განაცხადი წარმატებით გაიგზავნა</h1>
           <p className="text-slate-600">{done}</p>
           <p className="mt-2 text-sm text-slate-500">
-            Authorized officials will review your evidence. Thank you for helping your community.
+            უფლებამოსილი თანამდებობის პირები განიხილავენ შენს მტკიცებულებას. გმადლობთ, რომ ზრუნავ შენს თემზე.
           </p>
         </div>
       </div>
@@ -107,24 +105,24 @@ export default function ReportPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="mb-1 text-2xl font-bold">Report an issue</h1>
+      <h1 className="mb-1 text-2xl font-bold">განაცხადის შეტანა</h1>
       <p className="mb-6 text-sm text-slate-600">
-        Submit photo evidence of a potential public infraction. This is reviewed by authorized
-        officials — it does not issue any fine automatically.
+        ატვირთე ფოტო მტკიცებულება საჯარო სამართალდარღვევის შესახებ. განაცხადს 
+        უფლებამოსილი თანამდებობის პირები განიხილავენ — ჯარიმა ავტომატურად არ გაიცემა.
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Evidence */}
+        {/* მტკიცებულება */}
         <section className="card space-y-3">
-          <h2 className="font-semibold">1. Evidence</h2>
+          <h2 className="font-semibold">1. მტკიცებულება</h2>
           <PhotoUpload files={files} onChange={setFiles} onGps={(g) => setLocation(g)} />
         </section>
 
-        {/* Category + description */}
+        {/* კატეგორია და აღწერა */}
         <section className="card space-y-4">
-          <h2 className="font-semibold">2. Details</h2>
+          <h2 className="font-semibold">2. დეტალები</h2>
           <div>
-            <label className="label" htmlFor="category">Category</label>
+            <label className="label" htmlFor="category">კატეგორია</label>
             <select
               id="category"
               className="input"
@@ -137,17 +135,17 @@ export default function ReportPage() {
             </select>
           </div>
           <div>
-            <label className="label" htmlFor="desc">Description</label>
+            <label className="label" htmlFor="desc">აღწერა</label>
             <textarea
               id="desc"
               className="input min-h-28"
-              placeholder="Describe what you observed (at least 10 characters)…"
+              placeholder="აღწერე რა დაინახე (მინიმუმ 10 სიმბოლო)…"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
           <div>
-            <label className="label" htmlFor="when">When did it happen? (optional)</label>
+            <label className="label" htmlFor="when">როდის მოხდა? (სურვილისამებრ)</label>
             <input
               id="when"
               type="datetime-local"
@@ -158,30 +156,30 @@ export default function ReportPage() {
           </div>
         </section>
 
-        {/* Location */}
+        {/* ადგილმდებარეობა */}
         <section className="card space-y-3">
-          <h2 className="font-semibold">3. Location</h2>
+          <h2 className="font-semibold">3. ადგილმდებარეობა</h2>
           <p className="text-xs text-slate-500">
-            Click the map to set the location. If your photo contains GPS data, we’ll place it
-            for you automatically.
+            დააჭირე რუკაზე ადგილმდებარეობის მოსანიშნად. თუ ფოტოში GPS მონაცემებია, 
+            ადგილმდებარეობა ავტომატურად განისაზღვრება.
           </p>
           <MapPicker value={location} onChange={setLocation} />
           {location && (
             <p className="text-xs text-slate-500">
-              Selected: {location.lat.toFixed(5)}, {location.lng.toFixed(5)}
+              არჩეული: {location.lat.toFixed(5)}, {location.lng.toFixed(5)}
             </p>
           )}
           <input
             className="input"
-            placeholder="Address or landmark (optional)"
+            placeholder="მისამართი ან ორიენტირი (სურვილისამებრ)"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
           />
         </section>
 
-        {/* Submission identity */}
+        {/* გამგზავნის ვინაობა */}
         <section className="card space-y-3">
-          <h2 className="font-semibold">4. Your submission</h2>
+          <h2 className="font-semibold">4. შენი განაცხადი</h2>
           {user ? (
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -189,24 +187,25 @@ export default function ReportPage() {
                 checked={anonymous}
                 onChange={(e) => setAnonymous(e.target.checked)}
               />
-              Submit anonymously (don’t link this report to my account)
+              ანონიმურად გაგზავნა (განაცხადი არ დაუკავშირდება ჩემს ანგარიშს)
             </label>
           ) : (
             <p className="text-sm text-slate-600">
-              You’re submitting anonymously. Optionally leave a contact so officials can follow up.
+              განაცხადი ანონიმურად იგზავნება. სურვილისამებრ მიუთითე საკონტაქტო ინფორმაცია, 
+              რათა თანამდებობის პირებმა შეძლონ დაგიკავშირდნენ.
             </p>
           )}
           {(anonymous || !user) && (
             <input
               className="input"
-              placeholder="Contact email or phone (optional, encrypted)"
+              placeholder="საკონტაქტო ელ-ფოსტა ან ტელეფონი (სურვილისამებრ, დაშიფრული)"
               value={contact}
               onChange={(e) => setContact(e.target.value)}
             />
           )}
         </section>
 
-        {/* Consent */}
+        {/* თანხმობა */}
         <ConsentNotice checked={consent} onChange={setConsent} />
 
         {error && (
@@ -216,7 +215,7 @@ export default function ReportPage() {
         )}
 
         <button type="submit" className="btn-primary w-full py-3 text-base" disabled={!canSubmit}>
-          {submitting ? 'Submitting…' : 'Submit report'}
+          {submitting ? 'იგზავნება…' : 'განაცხადის გაგზავნა'}
         </button>
       </form>
     </div>
