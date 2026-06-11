@@ -9,7 +9,6 @@ export interface IUser {
   displayName: string | null;
   role: Role;
   emailVerified: boolean;
-  // Bumping this invalidates all previously issued access tokens.
   tokenVersion: number;
   verifyToken: string | null;
   verifyTokenExpiry: Date | null;
@@ -38,12 +37,9 @@ const UserSchema = new Schema<IUser>(
 );
 applyBaseConfig(UserSchema, true);
 
-// Unique but nullable -> sparse so many users can have null tokens simultaneously.
-UserSchema.index({ verifyToken: 1 }, { unique: true, sparse: true });
-UserSchema.index({ resetToken: 1 }, { unique: true, sparse: true });
+// ⚡ მხოლოდ ჩვეულებრივი ინდექსები უნიკალურობის (unique) გარეშე, რათა null-ებზე არასდროს გაჭედოს
+UserSchema.index({ verifyToken: 1 });
+UserSchema.index({ resetToken: 1 });
 
 export const User: Model<IUser> =
   (models.User as Model<IUser>) || model<IUser>('User', UserSchema);
-
-// 👇 ეს ხაზი აიძულებს Mongoose-ს წაშალოს ძველი, არასწორი ინდექსები ბაზიდან ჩართვისას
-User.cleanIndexes().catch(err => console.log("Index cleanup info:", err));
