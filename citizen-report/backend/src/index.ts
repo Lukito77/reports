@@ -7,7 +7,8 @@ async function start() {
   await connectMongo();
   logger.info('Connected to MongoDB');
 
-  const app = createApp();
+  // სწორად ვიღებთ app-ს ობიექტიდან, რომელსაც createApp() აბრუნებს
+  const { app } = createApp();
 
   const server = app.listen(env.PORT, () => {
     logger.info(`Citizen Report API listening on :${env.PORT} (${env.NODE_ENV})`);

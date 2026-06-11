@@ -2,6 +2,7 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import passport from './config/passport';
 
 import { logger } from './lib/logger';
 import { mongoose } from './lib/mongoose';
@@ -60,6 +61,9 @@ export function createApp() {
   app.use(express.urlencoded({ extended: true }));
   app.use(cookieParser());
   app.use(globalLimiter);
+
+  // აქ ვუწერთ "as any"-ს, რომ TypeScript-ის ტიპების ერორი გაქრეს
+  app.use(passport.initialize() as any);
 
   app.use('/api/auth', authRoutes);
   app.use('/api/reports', reportRoutes);
