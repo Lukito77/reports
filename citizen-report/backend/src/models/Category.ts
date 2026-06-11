@@ -3,8 +3,9 @@ import { stringId, applyBaseConfig } from './_shared';
 
 export interface ICategory {
   _id: string;
-  slug: string; // e.g. "illegal_parking"
-  name: string; // e.g. "Illegal parking"
+  slug: string;
+  name: string;
+  nameEn: string;
   description: string | null;
   active: boolean;
   createdAt: Date;
@@ -17,6 +18,7 @@ const CategorySchema = new Schema<ICategory>(
     ...stringId,
     slug: { type: String, required: true, unique: true },
     name: { type: String, required: true },
+    nameEn: { type: String, default: '' },
     description: { type: String, default: null },
     active: { type: Boolean, default: true },
   },

@@ -363,7 +363,7 @@ export async function getReport(
 /** Public list of categories for the submission form. */
 export function listCategories() {
   return Category.find({ active: true })
-    .select('-_id slug name description')
+    .select('-_id slug name nameEn description')
     .sort({ name: 1 })
     .lean();
 }

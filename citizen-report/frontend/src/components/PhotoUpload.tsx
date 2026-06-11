@@ -1,12 +1,8 @@
 'use client';
 
-/**
- * Photo/video picker with client-side preview, validation, and automatic GPS
- * extraction from the first image's EXIF (via exifr). Extracted coordinates are
- * surfaced to the parent so the map can recenter and the location prefill.
- */
 import { useCallback, useState } from 'react';
 import exifr from 'exifr';
+import { useI18n } from '@/lib/i18n';
 import type { LatLng } from './MapPicker';
 
 const ACCEPT = 'image/jpeg,image/png,image/webp,video/mp4';
@@ -26,6 +22,7 @@ interface Preview {
 }
 
 export function PhotoUpload({ files, onChange, onGps }: Props) {
+  const { lang } = useI18n();
   const [previews, setPreviews] = useState<Preview[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,7 +34,10 @@ export function PhotoUpload({ files, onChange, onGps }: Props) {
 
       const tooBig = list.find((f) => f.size > MAX_MB * 1024 * 1024);
       if (tooBig) {
-        setError(`"${tooBig.name}" exceeds the ${MAX_MB} MB limit.`);
+        setError(lang === 'ka'
+          ? `"${tooBig.name}" აჭარბებს ${MAX_MB} MB-ის ლიმიტს.`
+          : `"${tooBig.name}" exceeds the ${MAX_MB} MB limit.`
+        );
         return;
       }
       const combined = [...files, ...list].slice(0, MAX_FILES);
@@ -51,7 +51,6 @@ export function PhotoUpload({ files, onChange, onGps }: Props) {
         })),
       );
 
-      // Try to extract GPS from the first image.
       const firstImage = list.find((f) => f.type.startsWith('image/'));
       if (firstImage && onGps) {
         try {
@@ -64,7 +63,7 @@ export function PhotoUpload({ files, onChange, onGps }: Props) {
         }
       }
     },
-    [files, onChange, onGps],
+    [files, onChange, onGps, lang],
   );
 
   const remove = (index: number) => {
@@ -80,10 +79,13 @@ export function PhotoUpload({ files, onChange, onGps }: Props) {
       <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-8 text-center hover:border-brand-500">
         <span className="text-3xl">📷</span>
         <span className="mt-2 text-sm font-medium text-slate-700">
-          Tap to add photos {`(or a video)`}
+          {lang === 'ka' ? 'ფოტოების დასამატებლად დააჭირე (ან ვიდეო)' : 'Tap to add photos (or a video)'}
         </span>
         <span className="mt-1 text-xs text-slate-500">
-          JPEG/PNG/WebP or MP4 · up to {MAX_FILES} files · max {MAX_MB} MB each
+          {lang === 'ka'
+            ? `JPEG/PNG/WebP ან MP4 · მაქსიმუმ ${MAX_FILES} ფაილი · მაქს ${MAX_MB} MB თითო`
+            : `JPEG/PNG/WebP or MP4 · up to ${MAX_FILES} files · max ${MAX_MB} MB each`
+          }
         </span>
         <input
           type="file"
@@ -103,14 +105,13 @@ export function PhotoUpload({ files, onChange, onGps }: Props) {
               {p.isVideo ? (
                 <video src={p.url} className="h-24 w-full object-cover" />
               ) : (
-                // eslint-disable-next-line @next/next/no-img-element
                 <img src={p.url} alt={p.name} className="h-24 w-full object-cover" />
               )}
               <button
                 type="button"
                 onClick={() => remove(i)}
                 className="absolute right-1 top-1 rounded-full bg-black/60 px-2 text-xs text-white opacity-0 transition group-hover:opacity-100"
-                aria-label="Remove"
+                aria-label={lang === 'ka' ? 'წაშლა' : 'Remove'}
               >
                 ✕
               </button>

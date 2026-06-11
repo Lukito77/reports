@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { apiFetch, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { useI18n } from '@/lib/i18n';
 import { PhotoUpload } from '@/components/PhotoUpload';
 import { ConsentNotice, CONSENT_TEXT } from '@/components/ConsentNotice';
 import type { Category } from '@/lib/types';
@@ -20,6 +21,7 @@ const POLICY_VERSION = process.env.NEXT_PUBLIC_POLICY_VERSION || '1.0';
 export default function ReportPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const { t, lang } = useI18n();
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [categorySlug, setCategorySlug] = useState('');
@@ -42,7 +44,7 @@ export default function ReportPage() {
         setCategories(d.categories);
         if (d.categories[0]) setCategorySlug(d.categories[0].slug);
       })
-      .catch(() => setError('კატეგორიების ჩატვირთვა ვერ მოხერხდა. API მუშაობს?'));
+      .catch(() => setError(t.report.errorCategories));
   }, []);
 
   useEffect(() => {
@@ -82,7 +84,7 @@ export default function ReportPage() {
       setDone(res.message);
       if (user) setTimeout(() => router.push('/dashboard'), 1500);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'გაგზავნა ვერ მოხერხდა. გთხოვთ, სცადოთ თავიდან.');
+      setError(err instanceof ApiError ? err.message : t.report.errorSubmit);
     } finally {
       setSubmitting(false);
     }
@@ -93,11 +95,9 @@ export default function ReportPage() {
       <div className="mx-auto max-w-lg">
         <div className="card text-center">
           <div className="mb-3 text-5xl">✅</div>
-          <h1 className="mb-2 text-xl font-bold">განაცხადი წარმატებით გაიგზავნა</h1>
+          <h1 className="mb-2 text-xl font-bold">{t.report.successTitle}</h1>
           <p className="text-slate-600">{done}</p>
-          <p className="mt-2 text-sm text-slate-500">
-            უფლებამოსილი თანამდებობის პირები განიხილავენ შენს მტკიცებულებას. გმადლობთ, რომ ზრუნავ შენს თემზე.
-          </p>
+          <p className="mt-2 text-sm text-slate-500">{t.report.successMsg}</p>
         </div>
       </div>
     );
@@ -105,24 +105,19 @@ export default function ReportPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="mb-1 text-2xl font-bold">განაცხადის შეტანა</h1>
-      <p className="mb-6 text-sm text-slate-600">
-        ატვირთე ფოტო მტკიცებულება საჯარო სამართალდარღვევის შესახებ. განაცხადს 
-        უფლებამოსილი თანამდებობის პირები განიხილავენ — ჯარიმა ავტომატურად არ გაიცემა.
-      </p>
+      <h1 className="mb-1 text-2xl font-bold">{t.report.title}</h1>
+      <p className="mb-6 text-sm text-slate-600">{t.report.subtitle}</p>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* მტკიცებულება */}
         <section className="card space-y-3">
-          <h2 className="font-semibold">1. მტკიცებულება</h2>
+          <h2 className="font-semibold">{t.report.evidence}</h2>
           <PhotoUpload files={files} onChange={setFiles} onGps={(g) => setLocation(g)} />
         </section>
 
-        {/* კატეგორია და აღწერა */}
         <section className="card space-y-4">
-          <h2 className="font-semibold">2. დეტალები</h2>
+          <h2 className="font-semibold">{t.report.details}</h2>
           <div>
-            <label className="label" htmlFor="category">კატეგორია</label>
+            <label className="label" htmlFor="category">{t.report.category}</label>
             <select
               id="category"
               className="input"
@@ -130,22 +125,24 @@ export default function ReportPage() {
               onChange={(e) => setCategorySlug(e.target.value)}
             >
               {categories.map((c) => (
-                <option key={c.slug} value={c.slug}>{c.name}</option>
+                <option key={c.slug} value={c.slug}>
+                  {lang === 'en' && c.nameEn ? c.nameEn : c.name}
+                </option>
               ))}
             </select>
           </div>
           <div>
-            <label className="label" htmlFor="desc">აღწერა</label>
+            <label className="label" htmlFor="desc">{t.report.description}</label>
             <textarea
               id="desc"
               className="input min-h-28"
-              placeholder="აღწერე რა დაინახე (მინიმუმ 10 სიმბოლო)…"
+              placeholder={t.report.descPlaceholder}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
           <div>
-            <label className="label" htmlFor="when">როდის მოხდა? (სურვილისამებრ)</label>
+            <label className="label" htmlFor="when">{t.report.when}</label>
             <input
               id="when"
               type="datetime-local"
@@ -156,30 +153,25 @@ export default function ReportPage() {
           </div>
         </section>
 
-        {/* ადგილმდებარეობა */}
         <section className="card space-y-3">
-          <h2 className="font-semibold">3. ადგილმდებარეობა</h2>
-          <p className="text-xs text-slate-500">
-            დააჭირე რუკაზე ადგილმდებარეობის მოსანიშნად. თუ ფოტოში GPS მონაცემებია, 
-            ადგილმდებარეობა ავტომატურად განისაზღვრება.
-          </p>
+          <h2 className="font-semibold">{t.report.location}</h2>
+          <p className="text-xs text-slate-500">{t.report.locationHint}</p>
           <MapPicker value={location} onChange={setLocation} />
           {location && (
             <p className="text-xs text-slate-500">
-              არჩეული: {location.lat.toFixed(5)}, {location.lng.toFixed(5)}
+              {t.report.selected}: {location.lat.toFixed(5)}, {location.lng.toFixed(5)}
             </p>
           )}
           <input
             className="input"
-            placeholder="მისამართი ან ორიენტირი (სურვილისამებრ)"
+            placeholder={t.report.addressPlaceholder}
             value={address}
             onChange={(e) => setAddress(e.target.value)}
           />
         </section>
 
-        {/* გამგზავნის ვინაობა */}
         <section className="card space-y-3">
-          <h2 className="font-semibold">4. შენი განაცხადი</h2>
+          <h2 className="font-semibold">{t.report.yourReport}</h2>
           {user ? (
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -187,25 +179,21 @@ export default function ReportPage() {
                 checked={anonymous}
                 onChange={(e) => setAnonymous(e.target.checked)}
               />
-              ანონიმურად გაგზავნა (განაცხადი არ დაუკავშირდება ჩემს ანგარიშს)
+              {t.report.anonymousCheck}
             </label>
           ) : (
-            <p className="text-sm text-slate-600">
-              განაცხადი ანონიმურად იგზავნება. სურვილისამებრ მიუთითე საკონტაქტო ინფორმაცია, 
-              რათა თანამდებობის პირებმა შეძლონ დაგიკავშირდნენ.
-            </p>
+            <p className="text-sm text-slate-600">{t.report.anonymousHint}</p>
           )}
           {(anonymous || !user) && (
             <input
               className="input"
-              placeholder="საკონტაქტო ელ-ფოსტა ან ტელეფონი (სურვილისამებრ, დაშიფრული)"
+              placeholder={t.report.contactPlaceholder}
               value={contact}
               onChange={(e) => setContact(e.target.value)}
             />
           )}
         </section>
 
-        {/* თანხმობა */}
         <ConsentNotice checked={consent} onChange={setConsent} />
 
         {error && (
@@ -215,7 +203,7 @@ export default function ReportPage() {
         )}
 
         <button type="submit" className="btn-primary w-full py-3 text-base" disabled={!canSubmit}>
-          {submitting ? 'იგზავნება…' : 'განაცხადის გაგზავნა'}
+          {submitting ? t.report.submitting : t.report.submitBtn}
         </button>
       </form>
     </div>

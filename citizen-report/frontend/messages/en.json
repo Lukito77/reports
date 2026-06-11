@@ -1,0 +1,29 @@
+{
+  "nav": {
+    "reportIssue": "Report an issue",
+    "login": "Log in",
+    "signup": "Sign up"
+  },
+  "register": {
+    "title": "Create an account",
+    "subtitle": "Track your reports. You can also report anonymously without an account.",
+    "displayName": "Display name (optional)",
+    "email": "Email",
+    "password": "Password",
+    "passwordHint": "Minimum 10 characters, upper and lower case letters and a number.",
+    "createAccount": "Create account",
+    "alreadyHave": "Already have an account?",
+    "signIn": "Sign in"
+  },
+  "login": {
+    "title": "Sign in",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "noAccount": "Don't have an account?",
+    "register": "Sign up"
+  },
+  "footer": {
+    "disclaimer": "Citizen Report assists investigations — it does not issue fines or determine guilt. All decisions are made by authorized officials."
+  }
+}

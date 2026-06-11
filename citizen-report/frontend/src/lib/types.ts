@@ -20,6 +20,7 @@ export interface User {
 export interface Category {
   slug: string;
   name: string;
+  nameEn?: string;
   description?: string | null;
 }
 

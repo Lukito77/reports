@@ -1,14 +1,8 @@
-import { createApp } from '../app';
-import { connectMongo } from '../lib/mongoose';
+import { createApp } from '../app.js';
 
-let isConnected = false;
-
-const app = createApp();
+const { app, connectToDatabase } = createApp();
 
 export default async function handler(req: any, res: any) {
-  if (!isConnected) {
-    await connectMongo();
-    isConnected = true;
-  }
+  await connectToDatabase();
   return app(req, res);
 }

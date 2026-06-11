@@ -26,11 +26,11 @@ export function Navbar() {
           {loading ? null : user ? (
             <>
               <Link href="/dashboard" className="text-slate-600 hover:text-slate-900">
-                Dashboard
+                {lang === 'ka' ? 'პანელი' : 'Dashboard'}
               </Link>
               {isStaff && (
                 <Link href="/admin" className="text-slate-600 hover:text-slate-900">
-                  Admin
+                  {lang === 'ka' ? 'ადმინი' : 'Admin'}
                 </Link>
               )}
               <span className="hidden text-slate-400 sm:inline">·</span>
