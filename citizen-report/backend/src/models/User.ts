@@ -44,3 +44,6 @@ UserSchema.index({ resetToken: 1 }, { unique: true, sparse: true });
 
 export const User: Model<IUser> =
   (models.User as Model<IUser>) || model<IUser>('User', UserSchema);
+
+// 👇 ეს ხაზი აიძულებს Mongoose-ს წაშალოს ძველი, არასწორი ინდექსები ბაზიდან ჩართვისას
+User.cleanIndexes().catch(err => console.log("Index cleanup info:", err));
