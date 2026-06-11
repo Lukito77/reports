@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { AuthProvider } from '@/lib/auth';
 import { Navbar } from '@/components/Navbar';
 import { I18nProvider } from '@/lib/i18n';
+import { Footer } from '@/components/Footer';
 
 export const metadata: Metadata = {
   title: 'Citizen Report',
@@ -19,11 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AuthProvider>
             <Navbar />
             <main className="mx-auto w-full max-w-6xl px-4 py-8">{children}</main>
-            <footer className="border-t border-slate-200 bg-white">
-              <div className="mx-auto max-w-6xl px-4 py-6 text-center text-sm text-slate-500">
-                Citizen Report ეხმარება გამოძიებას — ის არ გასცემს ჯარიმებს და არ განსაზღვრავს დანაშაულს. ყველა გადაწყვეტილებას იღებენ უფლებამოსილი პირები.
-              </div>
-            </footer>
+            <Footer />
           </AuthProvider>
         </I18nProvider>
       </body>
