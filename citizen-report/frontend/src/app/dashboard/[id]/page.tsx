@@ -4,11 +4,13 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { apiFetch, ApiError } from '@/lib/api';
+import { useI18n, categoryLabel } from '@/lib/i18n';
 import { StatusBadge } from '@/components/StatusBadge';
 import type { Report } from '@/lib/types';
 
 export default function ReportDetailPage() {
   const params = useParams<{ id: string }>();
+  const { lang } = useI18n();
   const [report, setReport] = useState<Report | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,7 +29,7 @@ export default function ReportDetailPage() {
 
       <div className="card">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold">{report.category?.name ?? 'Report'}</h1>
+          <h1 className="text-xl font-bold">{categoryLabel(report.category, lang)}</h1>
           <StatusBadge status={report.status} />
         </div>
         <p className="mt-1 text-xs text-slate-400">

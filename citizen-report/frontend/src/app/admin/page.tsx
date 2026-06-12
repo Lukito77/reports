@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { useI18n, categoryLabel } from '@/lib/i18n';
 import { StatusBadge } from '@/components/StatusBadge';
 import type { Category, Paginated, Report, ReportStatus } from '@/lib/types';
 
@@ -22,6 +23,7 @@ interface FullReport extends Report {
 
 export default function AdminPage() {
   const { user, loading } = useAuth();
+  const { lang } = useI18n();
   const router = useRouter();
 
   const [stats, setStats] = useState<{ total: number; byStatus: Record<string, number> } | null>(null);
@@ -129,7 +131,7 @@ export default function AdminPage() {
             onChange={(e) => setFilters((f) => ({ ...f, categorySlug: e.target.value || undefined }))}
           >
             <option value="">All</option>
-            {categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+            {categories.map((c) => <option key={c.slug} value={c.slug}>{categoryLabel(c, lang)}</option>)}
           </select>
         </div>
         <div className="flex-1">
@@ -155,7 +157,7 @@ export default function AdminPage() {
               className={`card w-full text-left transition hover:shadow-md ${selected?.id === r.id ? 'ring-2 ring-brand-500' : ''}`}
             >
               <div className="flex items-center justify-between">
-                <span className="font-semibold">{r.category?.name}</span>
+                <span className="font-semibold">{categoryLabel(r.category, lang)}</span>
                 <StatusBadge status={r.status} />
               </div>
               <p className="mt-1 line-clamp-2 text-sm text-slate-600">{r.description}</p>
@@ -175,7 +177,7 @@ export default function AdminPage() {
           {selected ? (
             <div className="card space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="font-bold">{selected.category?.name}</h2>
+                <h2 className="font-bold">{categoryLabel(selected.category, lang)}</h2>
                 <StatusBadge status={selected.status} />
               </div>
               <p className="text-sm text-slate-700">{selected.description}</p>

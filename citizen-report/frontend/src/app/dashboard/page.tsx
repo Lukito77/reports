@@ -5,11 +5,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { apiFetch, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { useI18n, categoryLabel } from '@/lib/i18n';
 import { StatusBadge } from '@/components/StatusBadge';
 import type { Paginated, Report } from '@/lib/types';
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
+  const { lang } = useI18n();
   const router = useRouter();
   const [data, setData] = useState<Paginated<Report> | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -83,7 +85,7 @@ export default function DashboardPage() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold">{r.category?.name ?? 'Report'}</span>
+                  <span className="font-semibold">{categoryLabel(r.category, lang)}</span>
                   <StatusBadge status={r.status} />
                 </div>
                 <p className="mt-1 line-clamp-2 text-sm text-slate-600">{r.description}</p>

@@ -183,8 +183,20 @@ const translations = {
   },
 };
 
-type Language = 'en' | 'ka';
+export type Language = 'en' | 'ka';
 type Translations = typeof translations.en;
+
+/**
+ * კატეგორიის ლოკალიზებული სახელი — ბაზაში ორივე ენაზე ინახება
+ * (name ქართულად, nameEn ინგლისურად), აქ ვირჩევთ აქტიური ენის მიხედვით.
+ */
+export function categoryLabel(
+  c: { name: string; nameEn?: string | null } | null | undefined,
+  lang: Language,
+): string {
+  if (!c) return lang === 'ka' ? 'განაცხადი' : 'Report';
+  return lang === 'en' && c.nameEn ? c.nameEn : c.name;
+}
 
 interface I18nContextType {
   lang: Language;
