@@ -43,6 +43,16 @@ export async function handleGoogleAuthSuccess(req: Request, res: Response) {
     // 1. ვეძებთ იუზერს ბაზაში
     let user = await User.findOne({ email });
 
+    // თუ ანგარიში არსებობს, მაგრამ ემაილი ჯერ არ იყო ვერიფიცირებული —
+    // Google-მა ეს ემაილი უკვე დაადასტურა, ამიტომ ვერიფიცირებულად ვთვლით
+    if (user && !user.emailVerified) {
+      await User.updateOne(
+        { _id: user.id },
+        { emailVerified: true, verifyToken: null, verifyTokenExpiry: null },
+      );
+      user.emailVerified = true;
+    }
+
     // 2. თუ იუზერი არ არსებობს, ვქმნით ახალს
     if (!user) {
       // შემთხვევითი პაროლი — ამ ანგარიშით პაროლით შესვლა მაინც შეუძლებელი იქნება,
