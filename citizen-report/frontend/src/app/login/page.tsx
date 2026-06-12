@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { ApiError } from '@/lib/api';
+import { ApiError, setAccessToken, API_URL } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
 
 export default function LoginPage() {
-  const { login } = useAuth(); // თუ useAuth-ს აქვს შიგნით setToken ან რაიმე მსგავსი, გამოიყენე ის
+  const { login, refreshUser } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useI18n();
@@ -23,17 +23,19 @@ export default function LoginPage() {
     const authError = searchParams.get('error');
 
     if (token) {
-      // 1. ვინახავთ ტოკენს localStorage-ში (ან როგორც გაქვს აწყობილი შენს @/lib/auth-ში)
-      localStorage.setItem('crp_token', token);
-      
-      // 2. გადაგვყავს იუზერი დეშბორდზე
-      router.push('/dashboard');
+      // 1. ტოკენი მეხსიერებაში — ზუსტად ისე, როგორც ჩვეულებრივი login-ის შემდეგ.
+      //    (API კლიენტი ტოკენს მეხსიერებაში ინახავს და არა localStorage-ში)
+      setAccessToken(token);
+
+      // 2. ჩავტვირთავთ იუზერს და გადავდივართ დეშბორდზე
+      //    (replace — რომ ტოკენიანი URL ისტორიაში არ დარჩეს)
+      refreshUser().finally(() => router.replace('/dashboard'));
     }
 
     if (authError) {
       setError('Google-ით ავტორიზაცია ვერ მოხერხდა. სცადეთ თავიდან.');
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, refreshUser]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -51,7 +53,7 @@ export default function LoginPage() {
 
   // Google OAuth-ის ფუნქცია, რომელიც პირდაპირ ბექენდზე გადაამისამართებს იუზერს
   const handleGoogleLogin = () => {
-    window.location.href = 'https://reports-cyan.vercel.app/api/auth/google';
+    window.location.href = `${API_URL}/auth/google`;
   };
 
   return (

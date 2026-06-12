@@ -3,7 +3,7 @@ import { env, isProd } from '../../config/env';
 import * as authService from './auth.service';
 import { User, RefreshToken } from '../../models'; // წამოიღებს მოდელებს შენი პროექტიდან
 import crypto from 'crypto';
-import jwt from 'jsonwebtoken'; // ტოკენის ხელით მოსაწერად
+import { signAccessToken } from '../../lib/jwt';
 
 const REFRESH_COOKIE = 'crp_refresh';
 
@@ -11,7 +11,9 @@ function setRefreshCookie(res: Response, token: string, expiresAt: Date) {
   res.cookie(REFRESH_COOKIE, token, {
     httpOnly: true,
     secure: isProd, // პროდაქშენზე (Vercel) იქნება true
-    sameSite: 'lax', // OAuth-ის რედირექტისთვის 'lax' უფრო სტაბილურია ვიდრე 'strict'
+    // ფრონტი და ბექი სხვადასხვა დომენზეა (citizen-report-frontend... / reports-cyan...),
+    // ამიტომ პროდზე ქუქი მხოლოდ SameSite=None-ით გაიგზავნება cross-site fetch-ზე.
+    sameSite: isProd ? 'none' : 'lax',
     domain: env.COOKIE_DOMAIN,
     path: '/api/auth',
     expires: expiresAt,
@@ -29,22 +31,25 @@ function reqMeta(req: Request) {
 // ⚡ სრულად გამართული და ინტეგრირებული Google Auth ჰენდლერი
 export async function handleGoogleAuthSuccess(req: Request, res: Response) {
   try {
-    const googleUser = (req as any).user;
-    if (!googleUser) {
-      return res.redirect('https://citizen-report-frontend-gb8gec1tr.vercel.app/login?error=no_user_data');
+    // passport-ის google strategy აქ აბრუნებს {email, name, googleId} ობიექტს
+    const googleUser = req.user as unknown as { email?: string; name?: string } | undefined;
+    if (!googleUser?.email) {
+      return res.redirect(`${env.APP_BASE_URL}/login?error=no_user_data`);
     }
 
     const email = googleUser.email;
-    const displayName = googleUser.name || googleUser.displayName || 'Google User';
+    const displayName = googleUser.name || 'Google User';
 
     // 1. ვეძებთ იუზერს ბაზაში
     let user = await User.findOne({ email });
 
     // 2. თუ იუზერი არ არსებობს, ვქმნით ახალს
     if (!user) {
-      const randomPassword = crypto.randomBytes(16).toString('hex');
-      const salt = await require('bcryptjs').genSalt(12);
-      const hashedPassword = await require('bcryptjs').hash(randomPassword, salt);
+      // შემთხვევითი პაროლი — ამ ანგარიშით პაროლით შესვლა მაინც შეუძლებელი იქნება,
+      // სანამ იუზერი reset-password-ით არ დააყენებს საკუთარს.
+      const randomPassword = crypto.randomBytes(32).toString('hex');
+      const bcrypt = (await import('bcryptjs')).default;
+      const hashedPassword = await bcrypt.hash(randomPassword, 12);
 
       user = await User.create({
         email,
@@ -54,17 +59,11 @@ export async function handleGoogleAuthSuccess(req: Request, res: Response) {
       });
     }
 
-    // 3. ტოკენების გენერაცია (ზუსტად შენი auth.service-ის ანალოგიით)
-    // Access Token-ის შექმნა
-    const accessToken = jwt.sign(
-      { sub: user.id, role: user.role, tv: user.tokenVersion },
-      env.JWT_ACCESS_SECRET || 'your_access_secret_fallback', // დარწმუნდი რომ env-ში გაქვს ეს ცვლადი
-      { expiresIn: '15m' }
-    );
+    // 3. ტოკენების გენერაცია (ზუსტად ისე, როგორც auth.service აკეთებს)
+    const accessToken = signAccessToken({ sub: user.id, role: user.role, tv: user.tokenVersion });
 
-    // Refresh Token-ის შექმნა
     const rawRefreshToken = crypto.randomBytes(48).toString('hex');
-    const refreshExpiresAt = new Date(Date.now() + (env.JWT_REFRESH_TTL_DAYS || 7) * 24 * 60 * 60 * 1000);
+    const refreshExpiresAt = new Date(Date.now() + env.JWT_REFRESH_TTL_DAYS * 24 * 60 * 60 * 1000);
     const tokenHash = crypto.createHash('sha256').update(rawRefreshToken).digest('hex');
     const family = crypto.randomBytes(16).toString('hex');
 
@@ -81,13 +80,13 @@ export async function handleGoogleAuthSuccess(req: Request, res: Response) {
     // 4. ვსვამთ ქუქის ფრონტენდისთვის
     setRefreshCookie(res, rawRefreshToken, refreshExpiresAt);
 
-    // 5. გადაგვყავს იუზერი ფრონტენდზე და ტოკენი მიგვაქვს URL-ით
-    // ფრონტენდი ამ ტოკენს აიღებს და დასვამს მეხსიერებაში (setAccessToken)
-    return res.redirect(`https://citizen-report-frontend-gb8gec1tr.vercel.app/dashboard?token=${accessToken}`);
+    // 5. გადაგვყავს იუზერი ფრონტენდზე და ტოკენი მიგვაქვს URL-ით —
+    // /login გვერდი ამ ტოკენს იჭერს, მეხსიერებაში სვამს და დეშბორდზე გადადის
+    return res.redirect(`${env.APP_BASE_URL}/login?token=${encodeURIComponent(accessToken)}`);
 
   } catch (error) {
     console.error("Google Auth Controller Error:", error);
-    return res.redirect('https://citizen-report-frontend-gb8gec1tr.vercel.app/login?error=server_error');
+    return res.redirect(`${env.APP_BASE_URL}/login?error=server_error`);
   }
 }
 

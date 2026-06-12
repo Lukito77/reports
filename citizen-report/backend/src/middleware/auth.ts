@@ -15,13 +15,14 @@ export interface AuthUser {
   emailVerified: boolean;
 }
 
-// Augment Express Request with the authenticated user.
+// @types/passport already declares `Request.user?: Express.User`, so we merge
+// our auth shape into Express.User instead of re-declaring Request.user
+// (re-declaring it loses our fields and breaks req.user.id/role/emailVerified).
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
-    interface Request {
-      user?: AuthUser;
-    }
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
+    interface User extends AuthUser {}
   }
 }
 

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import passport from 'passport';
+import { env } from '../../config/env';
 import { validate } from '../../middleware/validate';
 import { authLimiter } from '../../middleware/rateLimit';
 import { verifyCaptcha } from '../../middleware/captcha';
@@ -35,13 +36,16 @@ router.get('/google', passport.authenticate('google', { scope: ['profile', 'emai
  */
 router.get(
   '/google/callback',
-  passport.authenticate('google', { failureRedirect: 'https://citizen-report-frontend-gb8gec1tr.vercel.app/login', session: false }),
+  passport.authenticate('google', {
+    failureRedirect: `${env.APP_BASE_URL}/login?error=google_auth_failed`,
+    session: false,
+  }),
   async (req, res) => {
     try {
       // req-ს და res-ს გადავცემთ პირდაპირ კონტროლერს, რომელიც თავად მიხედავს ქუქის და რედირექტს
       await ctrl.handleGoogleAuthSuccess(req, res);
     } catch (error) {
-      return res.redirect('https://citizen-report-frontend-gb8gec1tr.vercel.app/login?error=google_auth_failed');
+      return res.redirect(`${env.APP_BASE_URL}/login?error=google_auth_failed`);
     }
   }
 );
