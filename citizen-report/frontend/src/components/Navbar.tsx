@@ -33,8 +33,13 @@ export function Navbar() {
                   {lang === 'ka' ? 'ადმინი' : 'Admin'}
                 </Link>
               )}
-              <span className="hidden text-slate-400 sm:inline">·</span>
-              <span className="hidden text-slate-500 sm:inline">{user.email}</span>
+              {/* ემაილის ნაცვლად — წრიული ავატარი ინიციალით; სრული ემაილი hover-ზე ჩანს */}
+              <span
+                title={user.email}
+                className="flex h-8 w-8 select-none items-center justify-center rounded-full bg-brand-600 text-sm font-semibold uppercase text-white"
+              >
+                {(user.displayName || user.email).charAt(0)}
+              </span>
               <button
                 onClick={async () => {
                   await logout();

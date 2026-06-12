@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { ApiError } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
 
 export default function RegisterPage() {
   const { register } = useAuth();
+  const router = useRouter();
   const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -15,6 +17,13 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // წარმატებული რეგისტრაციის შემდეგ მესიჯს ვაჩვენებთ და მთავარ გვერდზე ვაბრუნებთ
+  useEffect(() => {
+    if (!done) return;
+    const timer = setTimeout(() => router.push('/'), 5000);
+    return () => clearTimeout(timer);
+  }, [done, router]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,6 +48,7 @@ export default function RegisterPage() {
             {t.register.title}
           </h1>
           <p className="text-sm text-slate-600">{done}</p>
+          <p className="mt-2 text-xs text-slate-400">{t.register.redirectingHome}</p>
           <Link href="/login" className="btn-secondary mt-4">
             {t.login.submit}
           </Link>

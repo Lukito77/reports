@@ -71,6 +71,7 @@ const translations = {
       createAccount: 'Create account',
       alreadyHave: 'Already have an account?',
       signIn: 'Sign in',
+      redirectingHome: 'Taking you back to the home page in a few seconds…',
     },
     login: {
       title: 'Sign in',
@@ -155,6 +156,7 @@ const translations = {
       createAccount: 'ანგარიშის შექმნა',
       alreadyHave: 'უკვე გაქვს ანგარიში?',
       signIn: 'შესვლა',
+      redirectingHome: 'რამდენიმე წამში მთავარ გვერდზე დაბრუნდები…',
     },
     login: {
       title: 'შესვლა',
