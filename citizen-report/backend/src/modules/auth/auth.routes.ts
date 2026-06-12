@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import passport from 'passport'; // <-- ჩაამატე ეს იმპორტი
+import passport from 'passport';
 import { validate } from '../../middleware/validate';
 import { authLimiter } from '../../middleware/rateLimit';
 import { verifyCaptcha } from '../../middleware/captcha';
@@ -35,25 +35,13 @@ router.get('/google', passport.authenticate('google', { scope: ['profile', 'emai
  */
 router.get(
   '/google/callback',
-  passport.authenticate('google', { failureRedirect: '/login', session: false }),
-  (req: any, res) => {
-    // req.user-ში ახლა ზის ის ინფორმაცია, რაც Google-მა დაგვიბრუნა (email, name, googleId)
-    // აქ უნდა გამოიძახო შენი თოქენების გენერაციის ფუნქცია კონტროლერიდან (მაგალითად JWT)
-    
+  passport.authenticate('google', { failureRedirect: 'https://citizen-report-frontend-gb8gec1tr.vercel.app/login', session: false }),
+  async (req, res) => {
     try {
-      // დროებით, რომ ტესტირება შეძლო და დაინახო, მუშაობს თუ არა, ბრაუზერში გამოვაჩინოთ იუზერი:
-      res.json({
-        message: "Google Auth წარმატებულია!",
-        user: req.user
-      });
-
-      /* საბოლოო ვარიანტში, როცა კონტროლერში ამას გადაიტან, კოდი ასეთი იქნება:
-        const tokens = await ctrl.generateAuthTokens(req.user); 
-        res.cookie('refreshToken', tokens.refreshToken, { httpOnly: true });
-        res.redirect(`https://შენი-ფრონტენდ-დომენი.vercel.app/dashboard?token=${tokens.accessToken}`);
-      */
+      // req-ს და res-ს გადავცემთ პირდაპირ კონტროლერს, რომელიც თავად მიხედავს ქუქის და რედირექტს
+      await ctrl.handleGoogleAuthSuccess(req, res);
     } catch (error) {
-      res.status(500).json({ error: "ავტორიზაციისას დაფიქსირდა შეცდომა" });
+      return res.redirect('https://citizen-report-frontend-gb8gec1tr.vercel.app/login?error=google_auth_failed');
     }
   }
 );
