@@ -48,7 +48,8 @@ const schema = z.object({
   SMTP_USER: z.string().optional().default(''),
   SMTP_PASS: z.string().optional().default(''),
   SMTP_FROM: z.string().default('Citizen Report <no-reply@citizen-report.example>'),
-  APP_BASE_URL: z.string().default('http://localhost:3000'),
+  // trim — env მნიშვნელობაში გაპარულმა \r/\n-მა redirect ჰედერი არ გატეხოს
+  APP_BASE_URL: z.string().trim().default('http://localhost:3000'),
 
   CAPTCHA_PROVIDER: z.enum(['hcaptcha', 'recaptcha', 'none']).default('none'),
   CAPTCHA_SECRET: z.string().optional().default(''),
