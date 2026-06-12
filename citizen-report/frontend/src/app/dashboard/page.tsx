@@ -2,44 +2,28 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation'; // დაემატა useSearchParams URL-ისთვის
-import { apiFetch, ApiError, setAccessToken } from '@/lib/api'; // დაემატა setAccessToken ტოკენის შესანახად
+import { useRouter } from 'next/navigation';
+import { apiFetch, ApiError } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { StatusBadge } from '@/components/StatusBadge';
 import type { Paginated, Report } from '@/lib/types';
 
 export default function DashboardPage() {
-  const { user, loading, refreshUser } = useAuth(); // დაემატა refreshUser იუზერის განახლებისთვის
+  const { user, loading } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams(); // დაემატა URL-ის პარამეტრების წასაკითხად
   const [data, setData] = useState<Paginated<Report> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
 
-  // ⚡ 1. გუგლიდან წამოღებული ტოკენის დამუშავების ეფექტი
+  // არაავტორიზებული მომხმარებლების გადამისამართება ლოგინზე
+  // (Google OAuth-ის ტოკენსაც /login გვერდი იჭერს და თვითონ მოდის აქ)
   useEffect(() => {
-    const token = searchParams.get('token');
-    if (token) {
-      // ვინახავთ მიღებულ ტოკენს
-      setAccessToken(token);
-      // ვაახლებთ კონტექსტში იუზერის მონაცემებს
-      refreshUser();
-      // ვასუფთავებთ URL-ს, რომ ?token=... აღარ გამოჩნდეს ლინკში
-      router.replace('/dashboard');
-    }
-  }, [searchParams, router, refreshUser]);
-
-  // 2. არასისტემური მომხმარებლების გადამისამართება ლოგინზე
-  useEffect(() => {
-    // თუ ტოკენი ახლახან მოვიდა URL-ში, loading ან user შეიძლება წამიერად არ იყოს მზად,
-    // ამიტომ ვამოწმებთ რომ URL-შიც არ იყოს ტოკენი, სანამ გადავიყვანთ ლოგინზე.
-    const token = searchParams.get('token');
-    if (!loading && !user && !token) {
+    if (!loading && !user) {
       router.replace('/login');
     }
-  }, [loading, user, router, searchParams]);
+  }, [loading, user, router]);
 
-  // 3. რეპორტების წამოღება ბაზიდან
+  // რეპორტების წამოღება ბაზიდან
   useEffect(() => {
     if (!user) return;
     apiFetch<Paginated<Report>>('/reports/mine')

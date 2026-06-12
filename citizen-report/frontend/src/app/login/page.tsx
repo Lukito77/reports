@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { ApiError, setAccessToken, API_URL } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
 
-export default function LoginPage() {
+function LoginForm() {
   const { login, refreshUser } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -104,5 +104,14 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+// useSearchParams() build-ის დროს Suspense-ს ითხოვს (იხ. verify-email-ის ანალოგიური პატერნი)
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<p className="text-center text-slate-500 py-10">Loading…</p>}>
+      <LoginForm />
+    </Suspense>
   );
 }
