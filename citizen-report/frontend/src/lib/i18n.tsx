@@ -72,6 +72,7 @@ const translations = {
       alreadyHave: 'Already have an account?',
       signIn: 'Sign in',
       redirectingHome: 'Taking you back to the home page in a few seconds…',
+      googleSignUp: 'Continue with Google',
     },
     login: {
       title: 'Sign in',
@@ -160,6 +161,7 @@ const translations = {
       alreadyHave: 'უკვე გაქვს ანგარიში?',
       signIn: 'შესვლა',
       redirectingHome: 'რამდენიმე წამში მთავარ გვერდზე დაბრუნდები…',
+      googleSignUp: 'Google-ით გაგრძელება',
     },
     login: {
       title: 'შესვლა',

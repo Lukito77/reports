@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
 
 export function Navbar() {
-  const { user, logout, loading } = useAuth();
+  const { user, logout } = useAuth();
   const router = useRouter();
   const { lang, setLang, t } = useI18n();
   const isStaff = user?.role === 'ADMIN' || user?.role === 'MODERATOR';
@@ -23,7 +23,9 @@ export function Navbar() {
             {t.nav.reportIssue}
           </Link>
 
-          {loading ? null : user ? (
+          {/* სანამ სესია მოწმდება (loading), შესვლა/რეგისტრაციას მაინც ვაჩვენებთ —
+              თორემ ნელი ქსელის დროს navbar ცარიელი ჩანს */}
+          {user ? (
             <>
               <Link href="/dashboard" className="text-slate-600 hover:text-slate-900">
                 {lang === 'ka' ? 'პანელი' : 'Dashboard'}

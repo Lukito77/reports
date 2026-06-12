@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { ApiError } from '@/lib/api';
+import { ApiError, API_URL } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
 
 export default function RegisterPage() {
@@ -79,6 +79,24 @@ export default function RegisterPage() {
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button type="submit" className="btn-primary w-full" disabled={busy}>
             {busy ? '...' : t.register.createAccount}
+          </button>
+
+          {/* Google-ით რეგისტრაცია — იგივე OAuth ნაკადი, რაც შესვლისას */}
+          <div className="relative flex py-2 items-center">
+            <div className="flex-grow border-t border-slate-200"></div>
+            <span className="flex-shrink mx-4 text-xs text-slate-400 uppercase">{t.login.or}</span>
+            <div className="flex-grow border-t border-slate-200"></div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => { window.location.href = `${API_URL}/auth/google`; }}
+            className="w-full flex items-center justify-center gap-2 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-medium py-2 px-4 rounded-md shadow-sm transition-colors text-sm"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24">
+              <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.866-3.577-7.866-8s3.536-8 7.866-8c2.46 0 4.105 1.025 5.047 1.926l3.227-3.107C18.216 1.22 15.44.5 12.24.5 5.866.5.7 5.666.7 12s5.166 11.5 11.54 11.5c6.655 0 11.08-4.68 11.08-11.275 0-.76-.08-1.345-.24-1.94H12.24z"/>
+            </svg>
+            {t.register.googleSignUp}
           </button>
         </form>
         <p className="mt-4 text-center text-sm text-slate-600">
