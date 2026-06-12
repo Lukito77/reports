@@ -21,7 +21,15 @@ function setRefreshCookie(res: Response, token: string, expiresAt: Date) {
 }
 
 function clearRefreshCookie(res: Response) {
-  res.clearCookie(REFRESH_COOKIE, { path: '/api/auth', domain: env.COOKIE_DOMAIN });
+  // წაშლის Set-Cookie-ს ბრაუზერი მხოლოდ მაშინ იღებს, თუ ატრიბუტები
+  // ზუსტად ემთხვევა იმას, რითაც ქუქი დაყენდა (განსაკუთრებით SameSite/Secure).
+  res.clearCookie(REFRESH_COOKIE, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+    domain: env.COOKIE_DOMAIN,
+    path: '/api/auth',
+  });
 }
 
 function reqMeta(req: Request) {

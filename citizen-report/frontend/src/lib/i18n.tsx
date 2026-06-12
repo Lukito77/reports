@@ -83,6 +83,9 @@ const translations = {
       register: 'Sign up',
       signingIn: 'Signing in…',
       error: 'Login failed',
+      or: 'or',
+      googleSignIn: 'Sign in with Google',
+      googleError: 'Google sign-in failed. Please try again.',
     },
     footer: {
       disclaimer: 'Citizen Report assists investigations — it does not issue fines or determine guilt. All enforcement decisions are made by authorized officials.',
@@ -168,6 +171,9 @@ const translations = {
       register: 'რეგისტრაცია',
       signingIn: 'მიმდინარეობს...',
       error: 'შესვლა ვერ მოხერხდა',
+      or: 'ან',
+      googleSignIn: 'Google-ით შესვლა',
+      googleError: 'Google-ით ავტორიზაცია ვერ მოხერხდა. სცადეთ თავიდან.',
     },
     footer: {
       disclaimer: 'Citizen Report ეხმარება გამოძიებას — ის არ გასცემს ჯარიმებს და არ განსაზღვრავს დანაშაულს. ყველა გადაწყვეტილებას იღებენ უფლებამოსილი პირები.',

@@ -27,15 +27,15 @@ function LoginForm() {
       //    (API კლიენტი ტოკენს მეხსიერებაში ინახავს და არა localStorage-ში)
       setAccessToken(token);
 
-      // 2. ჩავტვირთავთ იუზერს და გადავდივართ დეშბორდზე
+      // 2. ჩავტვირთავთ იუზერს და გადავდივართ მთავარ გვერდზე
       //    (replace — რომ ტოკენიანი URL ისტორიაში არ დარჩეს)
-      refreshUser().finally(() => router.replace('/dashboard'));
+      refreshUser().finally(() => router.replace('/'));
     }
 
     if (authError) {
-      setError('Google-ით ავტორიზაცია ვერ მოხერხდა. სცადეთ თავიდან.');
+      setError(t.login.googleError);
     }
-  }, [searchParams, router, refreshUser]);
+  }, [searchParams, router, refreshUser, t]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -43,7 +43,7 @@ function LoginForm() {
     setBusy(true);
     try {
       await login(email, password);
-      router.push('/dashboard');
+      router.push('/');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'შესვლა ვერ მოხერხდა');
     } finally {
@@ -60,7 +60,7 @@ function LoginForm() {
     <div className="mx-auto max-w-md">
       <div className="card">
         <h1 className="mb-1 text-2xl font-bold">{t.login.title}</h1>
-        <p className="mb-6 text-sm text-slate-600">შენს შეტყობინებებს თვალყურის დევნებისთვის შედი.</p>
+        <p className="mb-6 text-sm text-slate-600">{t.login.subtitle}</p>
         
         <form onSubmit={submit} className="space-y-4">
           <div>
@@ -81,7 +81,7 @@ function LoginForm() {
           {/* Google-ით შესვლის სექცია და ღილაკი */}
           <div className="relative flex py-2 items-center">
             <div className="flex-grow border-t border-slate-200"></div>
-            <span className="flex-shrink mx-4 text-xs text-slate-400 uppercase">ან</span>
+            <span className="flex-shrink mx-4 text-xs text-slate-400 uppercase">{t.login.or}</span>
             <div className="flex-grow border-t border-slate-200"></div>
           </div>
 
@@ -94,7 +94,7 @@ function LoginForm() {
             <svg className="h-5 w-5" viewBox="0 0 24 24">
               <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.866-3.577-7.866-8s3.536-8 7.866-8c2.46 0 4.105 1.025 5.047 1.926l3.227-3.107C18.216 1.22 15.44.5 12.24.5 5.866.5.7 5.666.7 12s5.166 11.5 11.54 11.5c6.655 0 11.08-4.68 11.08-11.275 0-.76-.08-1.345-.24-1.94H12.24z"/>
             </svg>
-            Google-ით შესვლა
+            {t.login.googleSignIn}
           </button>
         </form>
 
