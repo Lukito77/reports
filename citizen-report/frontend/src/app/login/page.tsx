@@ -1,20 +1,39 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { ApiError } from '@/lib/api';
 import { useI18n } from '@/lib/i18n';
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login } = useAuth(); // თუ useAuth-ს აქვს შიგნით setToken ან რაიმე მსგავსი, გამოიყენე ის
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // 🔄 ვამოწმებთ URL-ს Google Auth-იდან დაბრუნებისას
+  useEffect(() => {
+    const token = searchParams.get('token');
+    const authError = searchParams.get('error');
+
+    if (token) {
+      // 1. ვინახავთ ტოკენს localStorage-ში (ან როგორც გაქვს აწყობილი შენს @/lib/auth-ში)
+      localStorage.setItem('crp_token', token);
+      
+      // 2. გადაგვყავს იუზერი დეშბორდზე
+      router.push('/dashboard');
+    }
+
+    if (authError) {
+      setError('Google-ით ავტორიზაცია ვერ მოხერხდა. სცადეთ თავიდან.');
+    }
+  }, [searchParams, router]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -57,7 +76,7 @@ export default function LoginPage() {
             {busy ? 'მიმდინარეობს...' : t.login.submit}
           </button>
 
-          {/* 👇 Google-ით შესვლის სექცია და ღილაკი 👇 */}
+          {/* Google-ით შესვლის სექცია და ღილაკი */}
           <div className="relative flex py-2 items-center">
             <div className="flex-grow border-t border-slate-200"></div>
             <span className="flex-shrink mx-4 text-xs text-slate-400 uppercase">ან</span>
