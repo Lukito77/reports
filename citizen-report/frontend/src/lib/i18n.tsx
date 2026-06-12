@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 const translations = {
   en: {
@@ -184,8 +184,22 @@ interface I18nContextType {
 
 const I18nContext = createContext<I18nContextType | null>(null);
 
+const LANG_STORAGE_KEY = 'crp_lang';
+
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [lang, setLang] = useState<Language>('ka');
+  const [lang, setLangState] = useState<Language>('ka');
+
+  // შენახული ენის აღდგენა გვერდის ჩატვირთვისას.
+  // useEffect-ში (და არა useState-ის საწყის მნიშვნელობაში) — hydration mismatch-ის თავიდან ასაცილებლად.
+  useEffect(() => {
+    const saved = localStorage.getItem(LANG_STORAGE_KEY);
+    if (saved === 'en' || saved === 'ka') setLangState(saved);
+  }, []);
+
+  const setLang = (next: Language) => {
+    setLangState(next);
+    localStorage.setItem(LANG_STORAGE_KEY, next);
+  };
 
   return (
     <I18nContext.Provider value={{ lang, setLang, t: translations[lang] }}>
