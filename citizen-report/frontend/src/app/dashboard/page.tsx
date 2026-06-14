@@ -11,7 +11,7 @@ import type { Paginated, Report } from '@/lib/types';
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
-  const { lang } = useI18n();
+  const { t, lang } = useI18n();
   const router = useRouter();
   const [data, setData] = useState<Paginated<Report> | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +30,7 @@ export default function DashboardPage() {
     if (!user) return;
     apiFetch<Paginated<Report>>('/reports/mine')
       .then(setData)
-      .catch((err) => setError(err instanceof ApiError ? err.message : 'Failed to load reports'));
+      .catch((err) => setError(err instanceof ApiError ? err.message : t.dashboard.loadFailed));
   }, [user]);
 
   async function exportData() {
@@ -48,25 +48,25 @@ export default function DashboardPage() {
     }
   }
 
-  if (loading || !user) return <p className="text-center text-slate-500 py-10">Loading…</p>;
+  if (loading || !user) return <p className="text-center text-slate-500 py-10">{t.dashboard.loading}</p>;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">My reports</h1>
+          <h1 className="text-2xl font-bold">{t.dashboard.title}</h1>
           <p className="text-sm text-slate-600">
-            Signed in as {user.email}
+            {t.dashboard.signedInAs} {user.email}
             {!user.emailVerified && (
-              <span className="ml-2 badge bg-amber-100 text-amber-700">Email not verified</span>
+              <span className="ml-2 badge bg-amber-100 text-amber-700">{t.dashboard.emailNotVerified}</span>
             )}
           </p>
         </div>
         <div className="flex gap-2">
           <button onClick={exportData} className="btn-secondary" disabled={exporting}>
-            {exporting ? 'Exporting…' : 'Export my data'}
+            {exporting ? t.dashboard.exporting : t.dashboard.exportData}
           </button>
-          <Link href="/report" className="btn-primary">New report</Link>
+          <Link href="/report" className="btn-primary">{t.dashboard.newReport}</Link>
         </div>
       </div>
 
@@ -74,8 +74,8 @@ export default function DashboardPage() {
 
       {data && data.items.length === 0 && (
         <div className="card text-center text-slate-500">
-          You haven’t submitted any reports yet.{' '}
-          <Link href="/report" className="text-brand-600 hover:underline">Submit one</Link>.
+          {t.dashboard.empty}{' '}
+          <Link href="/report" className="text-brand-600 hover:underline">{t.dashboard.submitOne}</Link>.
         </div>
       )}
 
@@ -90,23 +90,23 @@ export default function DashboardPage() {
                 </div>
                 <p className="mt-1 line-clamp-2 text-sm text-slate-600">{r.description}</p>
                 <p className="mt-2 text-xs text-slate-400">
-                  {new Date(r.createdAt).toLocaleString()} · {r.media?.length ?? 0} media
+                  {new Date(r.createdAt).toLocaleString()} · {r.media?.length ?? 0} {t.dashboard.media}
                 </p>
               </div>
             </div>
             {r.status === 'APPROVED' && (
               <p className="mt-3 rounded bg-green-50 p-2 text-xs text-green-800">
-                ✓ Approved{r.reviewerNote && ` — ${r.reviewerNote}`}
+                ✓ {t.dashboard.approved}{r.reviewerNote && ` — ${r.reviewerNote}`}
               </p>
             )}
             {r.status === 'REJECTED' && (
               <p className="mt-3 rounded bg-red-50 p-2 text-xs text-red-800">
-                ✕ Rejected{r.reviewerNote && ` — ${r.reviewerNote}`}
+                ✕ {t.dashboard.rejected}{r.reviewerNote && ` — ${r.reviewerNote}`}
               </p>
             )}
             {r.status === 'INFO_REQUESTED' && r.reviewerNote && (
               <p className="mt-3 rounded bg-amber-50 p-2 text-xs text-amber-800">
-                Reviewer requested: {r.reviewerNote}
+                {t.dashboard.reviewerRequested} {r.reviewerNote}
               </p>
             )}
           </Link>

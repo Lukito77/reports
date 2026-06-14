@@ -1,5 +1,9 @@
-import { ReportStatus, STATUS_COLORS, STATUS_LABELS } from '@/lib/types';
+'use client';
+
+import { ReportStatus, STATUS_COLORS } from '@/lib/types';
+import { useI18n } from '@/lib/i18n';
 
 export function StatusBadge({ status }: { status: ReportStatus }) {
-  return <span className={`badge ${STATUS_COLORS[status]}`}>{STATUS_LABELS[status]}</span>;
+  const { t } = useI18n();
+  return <span className={`badge ${STATUS_COLORS[status]}`}>{t.status[status]}</span>;
 }

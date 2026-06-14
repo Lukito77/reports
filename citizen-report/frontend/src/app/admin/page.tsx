@@ -23,7 +23,7 @@ interface FullReport extends Report {
 
 export default function AdminPage() {
   const { user, loading } = useAuth();
-  const { lang } = useI18n();
+  const { t, lang } = useI18n();
   const router = useRouter();
 
   const [stats, setStats] = useState<{ total: number; byStatus: Record<string, number> } | null>(null);
@@ -54,9 +54,9 @@ export default function AdminPage() {
       setList(reports);
       setStats(s);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Failed to load');
+      setError(err instanceof ApiError ? err.message : t.admin.loadFailed);
     }
-  }, [filters]);
+  }, [filters, t]);
 
   useEffect(() => {
     if (user && (user.role === 'ADMIN' || user.role === 'MODERATOR')) {
@@ -81,28 +81,28 @@ export default function AdminPage() {
       setSelected({ ...selected, status: report.status });
       await loadList();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Status update failed');
+      setError(err instanceof ApiError ? err.message : t.admin.statusUpdateFailed);
     }
   }
 
   async function deleteReport() {
     if (!selected) return;
-    if (!window.confirm('Permanently delete this report and its media? This cannot be undone.')) return;
+    if (!window.confirm(t.admin.deleteConfirm)) return;
     try {
       await apiFetch(`/admin/reports/${selected.id}`, { method: 'DELETE' });
       setSelected(null);
       await loadList();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Delete failed');
+      setError(err instanceof ApiError ? err.message : t.admin.deleteFailed);
     }
   }
 
-  if (loading || !user) return <p className="text-center text-slate-500">Loading…</p>;
+  if (loading || !user) return <p className="text-center text-slate-500">{t.admin.loading}</p>;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Admin dashboard</h1>
+        <h1 className="text-2xl font-bold">{t.admin.title}</h1>
         <span className="badge bg-brand-100 text-brand-700">{user.role}</span>
       </div>
 
@@ -111,12 +111,12 @@ export default function AdminPage() {
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
           <div className="card py-3 text-center">
             <div className="text-2xl font-bold">{stats.total}</div>
-            <div className="text-xs text-slate-500">Total</div>
+            <div className="text-xs text-slate-500">{t.admin.total}</div>
           </div>
           {STATUSES.map((s) => (
             <div key={s} className="card py-3 text-center">
               <div className="text-2xl font-bold">{stats.byStatus[s] ?? 0}</div>
-              <div className="text-xs text-slate-500">{s.replace('_', ' ').toLowerCase()}</div>
+              <div className="text-xs text-slate-500">{t.status[s]}</div>
             </div>
           ))}
         </div>
@@ -125,36 +125,36 @@ export default function AdminPage() {
       {/* Filters */}
       <div className="card flex flex-wrap items-end gap-3">
         <div>
-          <label className="label">Status</label>
+          <label className="label">{t.admin.status}</label>
           <select
             className="input"
             value={filters.status ?? ''}
             onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value || undefined }))}
           >
-            <option value="">All</option>
-            {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+            <option value="">{t.admin.all}</option>
+            {STATUSES.map((s) => <option key={s} value={s}>{t.status[s]}</option>)}
           </select>
         </div>
         <div>
-          <label className="label">Category</label>
+          <label className="label">{t.admin.category}</label>
           <select
             className="input"
             value={filters.categorySlug ?? ''}
             onChange={(e) => setFilters((f) => ({ ...f, categorySlug: e.target.value || undefined }))}
           >
-            <option value="">All</option>
+            <option value="">{t.admin.all}</option>
             {categories.map((c) => <option key={c.slug} value={c.slug}>{categoryLabel(c, lang)}</option>)}
           </select>
         </div>
         <div className="flex-1">
-          <label className="label">Search description</label>
+          <label className="label">{t.admin.searchDescription}</label>
           <input
             className="input"
             value={filters.q ?? ''}
             onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value || undefined }))}
           />
         </div>
-        <button className="btn-primary" onClick={loadList}>Apply</button>
+        <button className="btn-primary" onClick={loadList}>{t.admin.apply}</button>
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
@@ -175,12 +175,12 @@ export default function AdminPage() {
               <p className="mt-1 line-clamp-2 text-sm text-slate-600">{r.description}</p>
               <p className="mt-2 text-xs text-slate-400">
                 {new Date(r.createdAt).toLocaleString()}
-                {r.reporter ? ` · ${r.reporter.email}` : ' · anonymous'}
+                {r.reporter ? ` · ${r.reporter.email}` : ` · ${t.admin.anonymous}`}
               </p>
             </button>
           ))}
           {list && list.items.length === 0 && (
-            <p className="text-center text-slate-500">No reports match these filters.</p>
+            <p className="text-center text-slate-500">{t.admin.noMatch}</p>
           )}
         </div>
 
@@ -221,7 +221,7 @@ export default function AdminPage() {
               {/* AI assistance (advisory) */}
               {selected.aiAnalyses && selected.aiAnalyses.length > 0 && (
                 <div className="rounded border border-slate-200 p-3 text-xs">
-                  <p className="mb-1 font-semibold text-slate-600">AI assistance (advisory only)</p>
+                  <p className="mb-1 font-semibold text-slate-600">{t.admin.aiAssistance}</p>
                   <ul className="space-y-1 text-slate-600">
                     {selected.aiAnalyses.map((a) => (
                       <li key={a.id}>
@@ -235,32 +235,32 @@ export default function AdminPage() {
 
               {/* Reviewer actions */}
               <div className="space-y-2 border-t border-slate-200 pt-3">
-                <label className="label">Reviewer note (shown to the reporter — e.g. a reason for approval/rejection or an info request)</label>
+                <label className="label">{t.admin.reviewerNoteLabel}</label>
                 <textarea className="input min-h-16" value={note} onChange={(e) => setNote(e.target.value)} />
                 <div className="flex flex-wrap gap-2">
-                  <button className="btn-secondary" onClick={() => changeStatus('UNDER_REVIEW')}>Mark reviewing</button>
-                  <button className="btn-secondary" onClick={() => changeStatus('INFO_REQUESTED')}>Request info</button>
-                  <button className="btn-primary bg-green-600 hover:bg-green-700" onClick={() => changeStatus('APPROVED')}>Approve</button>
-                  <button className="btn-primary bg-red-600 hover:bg-red-700" onClick={() => changeStatus('REJECTED')}>Reject</button>
-                  <button className="btn-secondary" onClick={() => changeStatus('CLOSED')}>Close</button>
+                  <button className="btn-secondary" onClick={() => changeStatus('UNDER_REVIEW')}>{t.admin.markReviewing}</button>
+                  <button className="btn-secondary" onClick={() => changeStatus('INFO_REQUESTED')}>{t.admin.requestInfo}</button>
+                  <button className="btn-primary bg-green-600 hover:bg-green-700" onClick={() => changeStatus('APPROVED')}>{t.admin.approve}</button>
+                  <button className="btn-primary bg-red-600 hover:bg-red-700" onClick={() => changeStatus('REJECTED')}>{t.admin.reject}</button>
+                  <button className="btn-secondary" onClick={() => changeStatus('CLOSED')}>{t.admin.close}</button>
                 </div>
                 {user.role === 'ADMIN' && (
                   <div className="border-t border-slate-200 pt-3">
                     <button className="btn-primary bg-red-700 hover:bg-red-800" onClick={deleteReport}>
-                      Delete permanently
+                      {t.admin.deletePermanently}
                     </button>
                     <p className="mt-1 text-[11px] text-slate-400">
-                      Removes the report, its media, and AI analyses for good. The deletion is recorded in the audit log.
+                      {t.admin.deleteHint}
                     </p>
                   </div>
                 )}
                 <p className="text-[11px] text-slate-400">
-                  Approval forwards this report for a human enforcement decision. It does not issue any penalty.
+                  {t.admin.approvalHint}
                 </p>
               </div>
             </div>
           ) : (
-            <div className="card text-center text-slate-500">Select a report to review its evidence.</div>
+            <div className="card text-center text-slate-500">{t.admin.selectPrompt}</div>
           )}
         </div>
       </div>

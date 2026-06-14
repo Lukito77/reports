@@ -57,14 +57,7 @@ export interface Paginated<T> {
   pageSize: number;
 }
 
-export const STATUS_LABELS: Record<ReportStatus, string> = {
-  SUBMITTED: 'Submitted',
-  UNDER_REVIEW: 'Under review',
-  INFO_REQUESTED: 'Info requested',
-  APPROVED: 'Approved',
-  REJECTED: 'Rejected',
-  CLOSED: 'Closed',
-};
+// Status display labels are localized via i18n (`t.status[...]`).
 
 export const STATUS_COLORS: Record<ReportStatus, string> = {
   SUBMITTED: 'bg-gray-100 text-gray-700',
