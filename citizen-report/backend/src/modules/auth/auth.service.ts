@@ -8,10 +8,9 @@ import { env } from '../../config/env';
 import { signAccessToken } from '../../lib/jwt';
 import { randomToken, sha256 } from '../../lib/crypto';
 import { ApiError } from '../../middleware/error';
-import { sendVerificationEmail, sendPasswordResetEmail } from '../../lib/mailer';
+import { sendPasswordResetEmail } from '../../lib/mailer';
 
 const BCRYPT_COST = 12;
-const VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
 const RESET_TTL_MS = 60 * 60 * 1000;
 
 export interface IssuedTokens {
@@ -62,17 +61,17 @@ export async function register(
   if (existing) throw ApiError.conflict('An account with this email already exists');
 
   const passwordHash = await bcrypt.hash(password, BCRYPT_COST);
-  const verifyToken = randomToken(32);
 
+  // No transactional email provider is configured for the deployment, so a
+  // verification link could never reach the user. Accounts are therefore
+  // created already verified — consistent with the Google sign-in flow.
   const user = await User.create({
     email,
     passwordHash,
     displayName,
-    verifyToken,
-    verifyTokenExpiry: new Date(Date.now() + VERIFY_TTL_MS),
+    emailVerified: true,
   });
 
-  await sendVerificationEmail(email, verifyToken);
   return publicUser(user);
 }
 
@@ -87,6 +86,15 @@ export async function login(
     ? await bcrypt.compare(password, user.passwordHash)
     : await bcrypt.compare(password, '$2a$12$invalidinvalidinvalidinvalidinvalidinvalidinv');
   if (!user || !ok) throw ApiError.unauthorized('Invalid email or password');
+
+  // Backfill accounts created before verification was dropped (no mail provider).
+  if (!user.emailVerified) {
+    await User.updateOne(
+      { _id: user.id },
+      { emailVerified: true, verifyToken: null, verifyTokenExpiry: null },
+    );
+    user.emailVerified = true;
+  }
 
   const family = randomToken(16);
   const tokens = await issueTokens(user, family, meta);
