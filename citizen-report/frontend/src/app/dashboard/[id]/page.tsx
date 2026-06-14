@@ -58,7 +58,21 @@ export default function ReportDetailPage() {
           </>
         )}
 
-        {report.reviewerNote && report.status === 'INFO_REQUESTED' && (
+        {report.status === 'APPROVED' && (
+          <div className="mt-4 rounded border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+            <strong>Your report was approved</strong> and forwarded for a human enforcement decision.
+            {report.reviewerNote && <p className="mt-1">Reviewer note: {report.reviewerNote}</p>}
+          </div>
+        )}
+
+        {report.status === 'REJECTED' && (
+          <div className="mt-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+            <strong>Your report was rejected.</strong>
+            {report.reviewerNote && <p className="mt-1">Reason: {report.reviewerNote}</p>}
+          </div>
+        )}
+
+        {report.status === 'INFO_REQUESTED' && report.reviewerNote && (
           <div className="mt-4 rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
             <strong>Reviewer requested more information:</strong> {report.reviewerNote}
           </div>

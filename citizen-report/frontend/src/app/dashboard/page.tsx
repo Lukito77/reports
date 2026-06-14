@@ -94,6 +94,16 @@ export default function DashboardPage() {
                 </p>
               </div>
             </div>
+            {r.status === 'APPROVED' && (
+              <p className="mt-3 rounded bg-green-50 p-2 text-xs text-green-800">
+                ✓ Approved{r.reviewerNote && ` — ${r.reviewerNote}`}
+              </p>
+            )}
+            {r.status === 'REJECTED' && (
+              <p className="mt-3 rounded bg-red-50 p-2 text-xs text-red-800">
+                ✕ Rejected{r.reviewerNote && ` — ${r.reviewerNote}`}
+              </p>
+            )}
             {r.status === 'INFO_REQUESTED' && r.reviewerNote && (
               <p className="mt-3 rounded bg-amber-50 p-2 text-xs text-amber-800">
                 Reviewer requested: {r.reviewerNote}

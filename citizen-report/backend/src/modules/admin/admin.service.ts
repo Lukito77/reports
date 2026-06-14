@@ -137,8 +137,9 @@ export async function updateStatus(
     reportId,
     {
       status: next,
-      reviewerNote:
-        next === ReportStatus.INFO_REQUESTED ? note ?? report.reviewerNote : report.reviewerNote,
+      // Keep any note the reviewer attached to this decision (e.g. a rejection
+      // reason), falling back to the existing note when none was provided.
+      reviewerNote: note ?? report.reviewerNote,
     },
     { new: true },
   ).populate('category');

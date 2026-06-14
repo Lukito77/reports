@@ -235,7 +235,7 @@ export default function AdminPage() {
 
               {/* Reviewer actions */}
               <div className="space-y-2 border-t border-slate-200 pt-3">
-                <label className="label">Reviewer note (sent to reporter for “info requested”)</label>
+                <label className="label">Reviewer note (shown to the reporter — e.g. a reason for approval/rejection or an info request)</label>
                 <textarea className="input min-h-16" value={note} onChange={(e) => setNote(e.target.value)} />
                 <div className="flex flex-wrap gap-2">
                   <button className="btn-secondary" onClick={() => changeStatus('UNDER_REVIEW')}>Mark reviewing</button>
