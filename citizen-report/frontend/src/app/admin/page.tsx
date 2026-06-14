@@ -85,6 +85,18 @@ export default function AdminPage() {
     }
   }
 
+  async function deleteReport() {
+    if (!selected) return;
+    if (!window.confirm('Permanently delete this report and its media? This cannot be undone.')) return;
+    try {
+      await apiFetch(`/admin/reports/${selected.id}`, { method: 'DELETE' });
+      setSelected(null);
+      await loadList();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Delete failed');
+    }
+  }
+
   if (loading || !user) return <p className="text-center text-slate-500">Loading…</p>;
 
   return (
@@ -232,6 +244,16 @@ export default function AdminPage() {
                   <button className="btn-primary bg-red-600 hover:bg-red-700" onClick={() => changeStatus('REJECTED')}>Reject</button>
                   <button className="btn-secondary" onClick={() => changeStatus('CLOSED')}>Close</button>
                 </div>
+                {user.role === 'ADMIN' && (
+                  <div className="border-t border-slate-200 pt-3">
+                    <button className="btn-primary bg-red-700 hover:bg-red-800" onClick={deleteReport}>
+                      Delete permanently
+                    </button>
+                    <p className="mt-1 text-[11px] text-slate-400">
+                      Removes the report, its media, and AI analyses for good. The deletion is recorded in the audit log.
+                    </p>
+                  </div>
+                )}
                 <p className="text-[11px] text-slate-400">
                   Approval forwards this report for a human enforcement decision. It does not issue any penalty.
                 </p>

@@ -19,6 +19,7 @@ import {
 } from '../../models';
 import { ApiError } from '../../middleware/error';
 import { recordAudit } from '../../lib/audit';
+import { hardDeleteReport } from '../reports/reports.service';
 import type { Request } from 'express';
 
 // Allowed transitions. SUBMITTED can go to review/info/approve/reject; etc.
@@ -156,6 +157,25 @@ export async function updateStatus(
   >;
   void contactEnc;
   return safe;
+}
+
+/**
+ * Permanently delete a report plus its media objects and dependent records.
+ * Audited before the row disappears so the action stays in the append-only log.
+ */
+export async function deleteReport(reportId: string, actorId: string, req: Request) {
+  const report = await Report.findById(reportId);
+  if (!report) throw ApiError.notFound('Report not found');
+
+  await recordAudit({
+    action: AuditAction.REPORT_DELETED,
+    actorId,
+    reportId,
+    metadata: { status: report.status },
+    req,
+  });
+
+  await hardDeleteReport(reportId);
 }
 
 export async function changeUserRole(targetUserId: string, role: Role, actorId: string, req: Request) {

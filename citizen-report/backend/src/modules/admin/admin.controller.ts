@@ -37,6 +37,12 @@ export async function updateStatus(req: Request, res: Response) {
   res.json({ report });
 }
 
+export async function deleteReport(req: Request, res: Response) {
+  if (!req.user) throw ApiError.unauthorized();
+  await service.deleteReport(req.params.id, req.user.id, req);
+  res.status(204).send();
+}
+
 export async function changeUserRole(req: Request, res: Response) {
   if (!req.user) throw ApiError.unauthorized();
   const user = await service.changeUserRole(req.params.userId, req.body.role, req.user.id, req);

@@ -51,6 +51,20 @@ router.patch(
 
 /**
  * @openapi
+ * /admin/reports/{id}:
+ *   delete:
+ *     tags: [Admin]
+ *     summary: Permanently delete a report and its media (ADMIN only, audited)
+ */
+router.delete(
+  '/reports/:id',
+  requireRole(Role.ADMIN),
+  validate({ params: reportIdSchema }),
+  ctrl.deleteReport,
+);
+
+/**
+ * @openapi
  * /admin/audit:
  *   get:
  *     tags: [Admin]
