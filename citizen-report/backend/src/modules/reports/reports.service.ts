@@ -385,3 +385,27 @@ export async function hardDeleteReport(id: string) {
   ]);
   await Report.deleteOne({ _id: id });
 }
+
+/**
+ * A citizen permanently deletes their OWN report (and its media). Anonymous
+ * reports have no owner, so they can only be removed by staff via the admin path.
+ */
+export async function deleteMyReport(
+  reportId: string,
+  user: { id: string },
+  req: import('express').Request,
+) {
+  const report = await Report.findById(reportId);
+  if (!report) throw ApiError.notFound('Report not found');
+  if (report.reporterId !== user.id) throw ApiError.forbidden();
+
+  await recordAudit({
+    action: AuditAction.REPORT_DELETED,
+    actorId: user.id,
+    reportId,
+    metadata: { status: report.status, deletedByReporter: true },
+    req,
+  });
+
+  await hardDeleteReport(reportId);
+}

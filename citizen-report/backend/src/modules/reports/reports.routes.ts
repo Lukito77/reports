@@ -54,4 +54,13 @@ router.get('/mine', requireAuth, validate({ query: listMyReportsSchema }), ctrl.
  */
 router.get('/:id', requireAuth, validate({ params: reportIdSchema }), ctrl.getReport);
 
+/**
+ * @openapi
+ * /reports/{id}:
+ *   delete:
+ *     tags: [Reports]
+ *     summary: Delete the authenticated user's own report (and its media)
+ */
+router.delete('/:id', requireAuth, validate({ params: reportIdSchema }), ctrl.deleteMyReport);
+
 export default router;

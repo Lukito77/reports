@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { apiFetch, ApiError } from '@/lib/api';
 import { useI18n, categoryLabel } from '@/lib/i18n';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -10,9 +10,24 @@ import type { Report } from '@/lib/types';
 
 export default function ReportDetailPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const { lang } = useI18n();
   const [report, setReport] = useState<Report | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  async function deleteReport() {
+    if (!report) return;
+    if (!window.confirm('Delete this report permanently? This cannot be undone.')) return;
+    setDeleting(true);
+    try {
+      await apiFetch(`/reports/${report.id}`, { method: 'DELETE' });
+      router.replace('/dashboard');
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Delete failed');
+      setDeleting(false);
+    }
+  }
 
   useEffect(() => {
     apiFetch<{ report: Report }>(`/reports/${params.id}`)
@@ -77,6 +92,19 @@ export default function ReportDetailPage() {
             <strong>Reviewer requested more information:</strong> {report.reviewerNote}
           </div>
         )}
+
+        <div className="mt-4 border-t border-slate-200 pt-3">
+          <button
+            className="btn-primary bg-red-600 hover:bg-red-700"
+            onClick={deleteReport}
+            disabled={deleting}
+          >
+            {deleting ? 'Deleting…' : 'Delete this report'}
+          </button>
+          <p className="mt-1 text-[11px] text-slate-400">
+            Permanently removes your report and its media.
+          </p>
+        </div>
       </div>
 
       {report.media && report.media.length > 0 && (

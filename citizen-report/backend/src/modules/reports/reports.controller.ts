@@ -40,3 +40,9 @@ export async function getReport(req: Request, res: Response) {
   });
   res.json({ report });
 }
+
+export async function deleteMyReport(req: Request, res: Response) {
+  if (!req.user) throw ApiError.unauthorized();
+  await service.deleteMyReport(req.params.id, { id: req.user.id }, req);
+  res.status(204).send();
+}
