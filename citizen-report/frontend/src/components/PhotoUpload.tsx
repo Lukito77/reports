@@ -79,11 +79,11 @@ export function PhotoUpload({ files, onChange, onGps }: Props) {
       <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-8 text-center hover:border-brand-500">
         <span className="text-3xl">📷</span>
         <span className="mt-2 text-sm font-medium text-slate-700">
-          {lang === 'ka' ? 'ფოტოების დასამატებლად დააჭირე (ან ვიდეო)' : 'Tap to add photos (or a video)'}
+          {lang === 'ka' ? 'დააჭირე ფოტოს ან ვიდეოს დასამატებლად' : 'Tap to add photos (or a video)'}
         </span>
         <span className="mt-1 text-xs text-slate-500">
           {lang === 'ka'
-            ? `JPEG/PNG/WebP ან MP4 · მაქსიმუმ ${MAX_FILES} ფაილი · მაქს ${MAX_MB} MB თითო`
+            ? `JPEG/PNG/WebP ან MP4 · მაქსიმუმ ${MAX_FILES} ფაილი · თითო მაქს. ${MAX_MB} MB`
             : `JPEG/PNG/WebP or MP4 · up to ${MAX_FILES} files · max ${MAX_MB} MB each`
           }
         </span>

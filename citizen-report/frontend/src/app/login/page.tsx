@@ -45,7 +45,7 @@ function LoginForm() {
       await login(email, password);
       router.push('/');
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'შესვლა ვერ მოხერხდა');
+      setError(err instanceof ApiError ? err.message : t.login.error);
     } finally {
       setBusy(false);
     }
@@ -75,7 +75,7 @@ function LoginForm() {
           {error && <p className="text-sm text-red-600">{error}</p>}
           
           <button type="submit" className="btn-primary w-full" disabled={busy}>
-            {busy ? 'მიმდინარეობს...' : t.login.submit}
+            {busy ? t.login.signingIn : t.login.submit}
           </button>
 
           {/* Google-ით შესვლის სექცია და ღილაკი */}
