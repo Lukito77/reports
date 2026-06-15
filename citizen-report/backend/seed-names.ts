@@ -6,7 +6,7 @@ const names: Record<string, string> = {
   'უკანონო პარკინგი': 'Illegal parking',
   'დაბლოკილი ტროტუარი': 'Blocked sidewalk',
   'მიტოვებული მანქანა': 'Abandoned vehicle',
-  'ნაგვის გადაყრა': 'Littering',
+  'უადგილოდ მოთავსებული ნაგავი': 'Littering',
   'ვანდალიზმი': 'Vandalism',
   'უკანონო ნარჩენების გადაყრა': 'Illegal dumping',
 };

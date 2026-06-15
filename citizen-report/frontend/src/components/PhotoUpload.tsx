@@ -79,7 +79,7 @@ export function PhotoUpload({ files, onChange, onGps }: Props) {
       <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-8 text-center hover:border-brand-500">
         <span className="text-3xl">📷</span>
         <span className="mt-2 text-sm font-medium text-slate-700">
-          {lang === 'ka' ? 'დააჭირე ფოტოს ან ვიდეოს დასამატებლად' : 'Tap to add photos (or a video)'}
+          {lang === 'ka' ? 'დააჭირეთ ფოტოს ან ვიდეოს დასამატებლად' : 'Tap to add photos (or a video)'}
         </span>
         <span className="mt-1 text-xs text-slate-500">
           {lang === 'ka'

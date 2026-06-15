@@ -6,7 +6,7 @@ const CATEGORIES = [
   { slug: 'illegal_parking', name: 'უკანონო პარკინგი', nameEn: 'Illegal parking', description: 'სატრანსპორტო საშუალებები გაჩერებულია საგზაო წესების დარღვევით.' },
   { slug: 'blocked_sidewalk', name: 'დაბლოკილი ტროტუარი', nameEn: 'Blocked sidewalk', description: 'ქვეითთა გზის დაბლოკვა.' },
   { slug: 'abandoned_vehicle', name: 'მიტოვებული მანქანა', nameEn: 'Abandoned vehicle', description: 'დიდი ხნის განმავლობაში მიტოვებული სატრანსპორტო საშუალება.' },
-  { slug: 'littering', name: 'ნაგვის გადაყრა', nameEn: 'Littering', description: 'საზოგადოებრივ ადგილებში ნარჩენების არაწესიერი გადაყრა.' },
+  { slug: 'littering', name: 'უადგილოდ მოთავსებული ნაგავი', nameEn: 'Littering', description: 'საზოგადოებრივ ადგილებში ნარჩენების არასათანადოდ განთავსება.' },
   { slug: 'vandalism', name: 'ვანდალიზმი', nameEn: 'Vandalism', description: 'საჯარო ან კერძო საკუთრების დაზიანება.' },
   { slug: 'illegal_dumping', name: 'უკანონო ნარჩენების გადაყრა', nameEn: 'Illegal dumping', description: 'მსხვილი ან საშიში ნარჩენების უკანონო გადაყრა.' },
   { slug: 'noise', name: 'ხმაურის დარღვევა', nameEn: 'Noise violation', description: 'მოსახლეობის შემაწუხებელი გადაჭარბებული ხმაური.' },
