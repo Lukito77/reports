@@ -1,14 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
 import { useSettings } from '@/lib/settings';
 
 export function Navbar() {
   const { user, logout } = useAuth();
-  const router = useRouter();
   const { lang, setLang, t } = useI18n();
   const { settings } = useSettings();
   const { branding, layout } = settings;
@@ -54,7 +52,10 @@ export function Navbar() {
               <button
                 onClick={async () => {
                   await logout();
-                  router.push('/');
+                  // Hard reload (not client-side nav) so all in-memory/router-cached
+                  // state of the previous account is fully discarded — otherwise the
+                  // old session can appear to "come back" when navigating to login.
+                  window.location.assign('/login');
                 }}
                 className="btn-secondary"
               >
