@@ -2,12 +2,14 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.listReports = listReports;
 exports.updateStatus = updateStatus;
+exports.deleteReport = deleteReport;
 exports.changeUserRole = changeUserRole;
 exports.listAuditLogs = listAuditLogs;
 exports.stats = stats;
 const models_1 = require("../../models");
 const error_1 = require("../../middleware/error");
 const audit_1 = require("../../lib/audit");
+const reports_service_1 = require("../reports/reports.service");
 // Allowed transitions. SUBMITTED can go to review/info/approve/reject; etc.
 const TRANSITIONS = {
     SUBMITTED: ['UNDER_REVIEW', 'INFO_REQUESTED', 'APPROVED', 'REJECTED'],
@@ -99,7 +101,9 @@ async function updateStatus(reportId, next, note, actorId, req) {
     }
     const updated = await models_1.Report.findByIdAndUpdate(reportId, {
         status: next,
-        reviewerNote: next === models_1.ReportStatus.INFO_REQUESTED ? note ?? report.reviewerNote : report.reviewerNote,
+        // Keep any note the reviewer attached to this decision (e.g. a rejection
+        // reason), falling back to the existing note when none was provided.
+        reviewerNote: note ?? report.reviewerNote,
     }, { new: true }).populate('category');
     await (0, audit_1.recordAudit)({
         action: ACTION_FOR_STATUS[next] ?? models_1.AuditAction.STATUS_CHANGED,
@@ -111,6 +115,23 @@ async function updateStatus(reportId, next, note, actorId, req) {
     const { contactEnc, ...safe } = updated.toObject();
     void contactEnc;
     return safe;
+}
+/**
+ * Permanently delete a report plus its media objects and dependent records.
+ * Audited before the row disappears so the action stays in the append-only log.
+ */
+async function deleteReport(reportId, actorId, req) {
+    const report = await models_1.Report.findById(reportId);
+    if (!report)
+        throw error_1.ApiError.notFound('Report not found');
+    await (0, audit_1.recordAudit)({
+        action: models_1.AuditAction.REPORT_DELETED,
+        actorId,
+        reportId,
+        metadata: { status: report.status },
+        req,
+    });
+    await (0, reports_service_1.hardDeleteReport)(reportId);
 }
 async function changeUserRole(targetUserId, role, actorId, req) {
     const user = await models_1.User.findById(targetUserId);

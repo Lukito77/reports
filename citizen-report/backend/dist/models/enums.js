@@ -5,7 +5,8 @@
  * are available, and so `z.nativeEnum(...)` and Mongoose `enum:` validation work.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AiAnalysisType = exports.AuditAction = exports.MediaKind = exports.ReportStatus = exports.Role = void 0;
+exports.AiAnalysisType = exports.ContentType = exports.ROLE_DEFAULT_PERMISSIONS = exports.ALL_PERMISSIONS = exports.Permission = exports.AuditAction = exports.MediaKind = exports.ReportStatus = exports.Role = void 0;
+exports.effectivePermissions = effectivePermissions;
 var Role;
 (function (Role) {
     Role["CITIZEN"] = "CITIZEN";
@@ -36,10 +37,66 @@ var AuditAction;
     AuditAction["REPORT_APPROVED"] = "REPORT_APPROVED";
     AuditAction["REPORT_REJECTED"] = "REPORT_REJECTED";
     AuditAction["REPORT_CLOSED"] = "REPORT_CLOSED";
+    AuditAction["REPORT_DELETED"] = "REPORT_DELETED";
     AuditAction["USER_ROLE_CHANGED"] = "USER_ROLE_CHANGED";
+    AuditAction["USER_PERMISSIONS_CHANGED"] = "USER_PERMISSIONS_CHANGED";
     AuditAction["DATA_EXPORTED"] = "DATA_EXPORTED";
     AuditAction["DATA_ERASED"] = "DATA_ERASED";
+    // Control-panel actions.
+    AuditAction["SETTINGS_UPDATED"] = "SETTINGS_UPDATED";
+    AuditAction["CONTENT_UPDATED"] = "CONTENT_UPDATED";
+    AuditAction["COLLECTION_CREATED"] = "COLLECTION_CREATED";
+    AuditAction["COLLECTION_UPDATED"] = "COLLECTION_UPDATED";
+    AuditAction["COLLECTION_DELETED"] = "COLLECTION_DELETED";
 })(AuditAction || (exports.AuditAction = AuditAction = {}));
+/**
+ * Fine-grained permissions. Roles still gate access broadly (ADMIN implicitly
+ * has every permission); these are additive grants — mostly to let a MODERATOR
+ * manage a specific surface (content, settings, etc.) without becoming an ADMIN.
+ */
+var Permission;
+(function (Permission) {
+    Permission["REPORTS_VIEW"] = "reports.view";
+    Permission["REPORTS_MODERATE"] = "reports.moderate";
+    Permission["REPORTS_DELETE"] = "reports.delete";
+    Permission["USERS_MANAGE"] = "users.manage";
+    Permission["CONTENT_MANAGE"] = "content.manage";
+    Permission["SETTINGS_MANAGE"] = "settings.manage";
+    Permission["COLLECTIONS_MANAGE"] = "collections.manage";
+    Permission["AUDIT_VIEW"] = "audit.view";
+    Permission["ANALYTICS_VIEW"] = "analytics.view";
+})(Permission || (exports.Permission = Permission = {}));
+exports.ALL_PERMISSIONS = Object.values(Permission);
+/** Permissions a role is assumed to have even without explicit grants. */
+exports.ROLE_DEFAULT_PERMISSIONS = {
+    [Role.ADMIN]: exports.ALL_PERMISSIONS,
+    [Role.MODERATOR]: [
+        Permission.REPORTS_VIEW,
+        Permission.REPORTS_MODERATE,
+        Permission.ANALYTICS_VIEW,
+    ],
+    [Role.CITIZEN]: [],
+};
+/**
+ * Effective permissions for a user = role defaults ∪ explicit grants.
+ * ADMIN always resolves to the full set.
+ */
+function effectivePermissions(role, granted = []) {
+    if (role === Role.ADMIN)
+        return exports.ALL_PERMISSIONS;
+    const set = new Set(exports.ROLE_DEFAULT_PERMISSIONS[role] ?? []);
+    for (const p of granted) {
+        if (exports.ALL_PERMISSIONS.includes(p))
+            set.add(p);
+    }
+    return [...set];
+}
+var ContentType;
+(function (ContentType) {
+    ContentType["TEXT"] = "text";
+    ContentType["TEXTAREA"] = "textarea";
+    ContentType["HTML"] = "html";
+})(ContentType || (exports.ContentType = ContentType = {}));
 var AiAnalysisType;
 (function (AiAnalysisType) {
     AiAnalysisType["PLATE_OCR"] = "PLATE_OCR";

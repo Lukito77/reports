@@ -76,5 +76,13 @@ router.get('/mine', auth_1.requireAuth, (0, validate_1.validate)({ query: report
  *     summary: Get a single report (own report for citizens, any for staff)
  */
 router.get('/:id', auth_1.requireAuth, (0, validate_1.validate)({ params: reports_schema_1.reportIdSchema }), ctrl.getReport);
+/**
+ * @openapi
+ * /reports/{id}:
+ *   delete:
+ *     tags: [Reports]
+ *     summary: Delete the authenticated user's own report (and its media)
+ */
+router.delete('/:id', auth_1.requireAuth, (0, validate_1.validate)({ params: reports_schema_1.reportIdSchema }), ctrl.deleteMyReport);
 exports.default = router;
 //# sourceMappingURL=reports.routes.js.map

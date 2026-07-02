@@ -27,7 +27,8 @@ const schema = zod_1.z.object({
     ENCRYPTION_KEY: zod_1.z
         .string()
         .regex(/^[0-9a-fA-F]{64}$/, 'ENCRYPTION_KEY must be 64 hex characters (32 bytes)'),
-    COOKIE_DOMAIN: zod_1.z.string().default('localhost'),
+    // If unset, the cookie is host-only (correct for both localhost and *.vercel.app).
+    COOKIE_DOMAIN: zod_1.z.string().optional(),
     COOKIE_SECURE: boolish(false),
     CORS_ORIGIN: zod_1.z.string().default('http://localhost:3000'),
     // Cloudinary (private media storage + signed delivery URLs).
@@ -41,7 +42,8 @@ const schema = zod_1.z.object({
     SMTP_USER: zod_1.z.string().optional().default(''),
     SMTP_PASS: zod_1.z.string().optional().default(''),
     SMTP_FROM: zod_1.z.string().default('Citizen Report <no-reply@citizen-report.example>'),
-    APP_BASE_URL: zod_1.z.string().default('http://localhost:3000'),
+    // trim — env მნიშვნელობაში გაპარულმა \r/\n-მა redirect ჰედერი არ გატეხოს
+    APP_BASE_URL: zod_1.z.string().trim().default('http://localhost:3000'),
     CAPTCHA_PROVIDER: zod_1.z.enum(['hcaptcha', 'recaptcha', 'none']).default('none'),
     CAPTCHA_SECRET: zod_1.z.string().optional().default(''),
     REDIS_URL: zod_1.z.string().optional().default(''),

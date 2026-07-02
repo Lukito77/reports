@@ -37,6 +37,7 @@ exports.createReport = createReport;
 exports.listCategories = listCategories;
 exports.listMyReports = listMyReports;
 exports.getReport = getReport;
+exports.deleteMyReport = deleteMyReport;
 const error_1 = require("../../middleware/error");
 const service = __importStar(require("./reports.service"));
 async function createReport(req, res) {
@@ -66,5 +67,11 @@ async function getReport(req, res) {
         role: req.user.role,
     });
     res.json({ report });
+}
+async function deleteMyReport(req, res) {
+    if (!req.user)
+        throw error_1.ApiError.unauthorized();
+    await service.deleteMyReport(req.params.id, { id: req.user.id }, req);
+    res.status(204).send();
 }
 //# sourceMappingURL=reports.controller.js.map

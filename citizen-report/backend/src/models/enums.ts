@@ -35,8 +35,64 @@ export enum AuditAction {
   REPORT_CLOSED = 'REPORT_CLOSED',
   REPORT_DELETED = 'REPORT_DELETED',
   USER_ROLE_CHANGED = 'USER_ROLE_CHANGED',
+  USER_PERMISSIONS_CHANGED = 'USER_PERMISSIONS_CHANGED',
   DATA_EXPORTED = 'DATA_EXPORTED',
   DATA_ERASED = 'DATA_ERASED',
+  // Control-panel actions.
+  SETTINGS_UPDATED = 'SETTINGS_UPDATED',
+  CONTENT_UPDATED = 'CONTENT_UPDATED',
+  COLLECTION_CREATED = 'COLLECTION_CREATED',
+  COLLECTION_UPDATED = 'COLLECTION_UPDATED',
+  COLLECTION_DELETED = 'COLLECTION_DELETED',
+}
+
+/**
+ * Fine-grained permissions. Roles still gate access broadly (ADMIN implicitly
+ * has every permission); these are additive grants — mostly to let a MODERATOR
+ * manage a specific surface (content, settings, etc.) without becoming an ADMIN.
+ */
+export enum Permission {
+  REPORTS_VIEW = 'reports.view',
+  REPORTS_MODERATE = 'reports.moderate',
+  REPORTS_DELETE = 'reports.delete',
+  USERS_MANAGE = 'users.manage',
+  CONTENT_MANAGE = 'content.manage',
+  SETTINGS_MANAGE = 'settings.manage',
+  COLLECTIONS_MANAGE = 'collections.manage',
+  AUDIT_VIEW = 'audit.view',
+  ANALYTICS_VIEW = 'analytics.view',
+}
+
+export const ALL_PERMISSIONS: Permission[] = Object.values(Permission);
+
+/** Permissions a role is assumed to have even without explicit grants. */
+export const ROLE_DEFAULT_PERMISSIONS: Record<Role, Permission[]> = {
+  [Role.ADMIN]: ALL_PERMISSIONS,
+  [Role.MODERATOR]: [
+    Permission.REPORTS_VIEW,
+    Permission.REPORTS_MODERATE,
+    Permission.ANALYTICS_VIEW,
+  ],
+  [Role.CITIZEN]: [],
+};
+
+/**
+ * Effective permissions for a user = role defaults ∪ explicit grants.
+ * ADMIN always resolves to the full set.
+ */
+export function effectivePermissions(role: Role, granted: string[] = []): Permission[] {
+  if (role === Role.ADMIN) return ALL_PERMISSIONS;
+  const set = new Set<Permission>(ROLE_DEFAULT_PERMISSIONS[role] ?? []);
+  for (const p of granted) {
+    if ((ALL_PERMISSIONS as string[]).includes(p)) set.add(p as Permission);
+  }
+  return [...set];
+}
+
+export enum ContentType {
+  TEXT = 'text',
+  TEXTAREA = 'textarea',
+  HTML = 'html',
 }
 
 export enum AiAnalysisType {

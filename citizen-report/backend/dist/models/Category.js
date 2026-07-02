@@ -7,6 +7,7 @@ const CategorySchema = new mongoose_1.Schema({
     ..._shared_1.stringId,
     slug: { type: String, required: true, unique: true },
     name: { type: String, required: true },
+    nameEn: { type: String, default: '' },
     description: { type: String, default: null },
     active: { type: Boolean, default: true },
 });

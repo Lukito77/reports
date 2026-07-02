@@ -3,8 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.requireAuth = requireAuth;
 exports.optionalAuth = optionalAuth;
 exports.requireRole = requireRole;
+exports.requirePermission = requirePermission;
 exports.requireVerified = requireVerified;
 const models_1 = require("../models");
+const enums_1 = require("../models/enums");
 const jwt_1 = require("../lib/jwt");
 const error_1 = require("./error");
 function extractToken(req) {
@@ -21,11 +23,16 @@ async function resolveUser(token) {
     catch {
         return null;
     }
-    const user = await models_1.User.findById(payload.sub).select('role emailVerified tokenVersion');
+    const user = await models_1.User.findById(payload.sub).select('role permissions emailVerified tokenVersion');
     // Reject tokens issued before the latest tokenVersion bump (logout/pw change).
     if (!user || user.tokenVersion !== payload.tv)
         return null;
-    return { id: user.id, role: user.role, emailVerified: user.emailVerified };
+    return {
+        id: user.id,
+        role: user.role,
+        emailVerified: user.emailVerified,
+        permissions: (0, enums_1.effectivePermissions)(user.role, user.permissions),
+    };
 }
 async function requireAuth(req, _res, next) {
     const token = extractToken(req);
@@ -53,6 +60,22 @@ function requireRole(...roles) {
         if (!roles.includes(req.user.role))
             return next(error_1.ApiError.forbidden());
         next();
+    };
+}
+/**
+ * Passes if the user holds ANY of the listed permissions. ADMIN always passes
+ * (it implicitly holds every permission via `effectivePermissions`).
+ */
+function requirePermission(...perms) {
+    return (req, _res, next) => {
+        if (!req.user)
+            return next(error_1.ApiError.unauthorized());
+        if (req.user.role === models_1.Role.ADMIN)
+            return next();
+        const held = req.user.permissions ?? [];
+        if (perms.some((p) => held.includes(p)))
+            return next();
+        next(error_1.ApiError.forbidden());
     };
 }
 function requireVerified(req, _res, next) {

@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import passport from 'passport';
+import passport, { googleEnabled } from '../../config/passport';
 import { env } from '../../config/env';
+import { ApiError } from '../../middleware/error';
 import { validate } from '../../middleware/validate';
 import { authLimiter } from '../../middleware/rateLimit';
 import { verifyCaptcha } from '../../middleware/captcha';
@@ -18,6 +19,14 @@ const router = Router();
 // All auth routes are tightly rate-limited.
 router.use(authLimiter);
 
+// Reject Google routes cleanly when OAuth isn't configured (instead of throwing
+// "Unknown authentication strategy 'google'").
+const requireGoogle = (
+  _req: import('express').Request,
+  _res: import('express').Response,
+  next: import('express').NextFunction,
+) => (googleEnabled ? next() : next(ApiError.badRequest('Google sign-in is not configured')));
+
 /**
  * @openapi
  * /auth/google:
@@ -25,7 +34,18 @@ router.use(authLimiter);
  * tags: [Auth]
  * summary: Initiate Google OAuth authentication flow
  */
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'], session: false }));
+router.get(
+  '/google',
+  requireGoogle,
+  (req, res, next) =>
+    passport.authenticate('google', {
+      scope: ['profile', 'email'],
+      session: false,
+      // Force Google's account chooser so users can switch accounts after
+      // logging out (otherwise Google silently reuses the signed-in account).
+      prompt: 'select_account',
+    })(req, res, next),
+);
 
 /**
  * @openapi
@@ -36,10 +56,12 @@ router.get('/google', passport.authenticate('google', { scope: ['profile', 'emai
  */
 router.get(
   '/google/callback',
-  passport.authenticate('google', {
-    failureRedirect: `${env.APP_BASE_URL}/login?error=google_auth_failed`,
-    session: false,
-  }),
+  requireGoogle,
+  (req, res, next) =>
+    passport.authenticate('google', {
+      failureRedirect: `${env.APP_BASE_URL}/login?error=google_auth_failed`,
+      session: false,
+    })(req, res, next),
   async (req, res) => {
     try {
       // req-ს და res-ს გადავცემთ პირდაპირ კონტროლერს, რომელიც თავად მიხედავს ქუქის და რედირექტს

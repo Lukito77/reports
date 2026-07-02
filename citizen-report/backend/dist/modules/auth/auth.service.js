@@ -16,13 +16,13 @@ exports.resetPassword = resetPassword;
  */
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const models_1 = require("../../models");
+const enums_1 = require("../../models/enums");
 const env_1 = require("../../config/env");
 const jwt_1 = require("../../lib/jwt");
 const crypto_1 = require("../../lib/crypto");
 const error_1 = require("../../middleware/error");
 const mailer_1 = require("../../lib/mailer");
 const BCRYPT_COST = 12;
-const VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
 const RESET_TTL_MS = 60 * 60 * 1000;
 function publicUser(u) {
     return {
@@ -30,6 +30,7 @@ function publicUser(u) {
         email: u.email,
         displayName: u.displayName,
         role: u.role,
+        permissions: (0, enums_1.effectivePermissions)(u.role, u.permissions),
         emailVerified: u.emailVerified,
         createdAt: u.createdAt,
     };
@@ -54,15 +55,15 @@ async function register(email, password, displayName) {
     if (existing)
         throw error_1.ApiError.conflict('An account with this email already exists');
     const passwordHash = await bcryptjs_1.default.hash(password, BCRYPT_COST);
-    const verifyToken = (0, crypto_1.randomToken)(32);
+    // No transactional email provider is configured for the deployment, so a
+    // verification link could never reach the user. Accounts are therefore
+    // created already verified — consistent with the Google sign-in flow.
     const user = await models_1.User.create({
         email,
         passwordHash,
         displayName,
-        verifyToken,
-        verifyTokenExpiry: new Date(Date.now() + VERIFY_TTL_MS),
+        emailVerified: true,
     });
-    await (0, mailer_1.sendVerificationEmail)(email, verifyToken);
     return publicUser(user);
 }
 async function login(email, password, meta) {
@@ -73,6 +74,11 @@ async function login(email, password, meta) {
         : await bcryptjs_1.default.compare(password, '$2a$12$invalidinvalidinvalidinvalidinvalidinvalidinv');
     if (!user || !ok)
         throw error_1.ApiError.unauthorized('Invalid email or password');
+    // Backfill accounts created before verification was dropped (no mail provider).
+    if (!user.emailVerified) {
+        await models_1.User.updateOne({ _id: user.id }, { emailVerified: true, verifyToken: null, verifyTokenExpiry: null });
+        user.emailVerified = true;
+    }
     const family = (0, crypto_1.randomToken)(16);
     const tokens = await issueTokens(user, family, meta);
     return { user: publicUser(user), tokens };

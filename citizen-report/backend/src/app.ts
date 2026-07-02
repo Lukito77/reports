@@ -13,6 +13,7 @@ import authRoutes from './modules/auth/auth.routes';
 import reportRoutes from './modules/reports/reports.routes';
 import adminRoutes from './modules/admin/admin.routes';
 import userRoutes from './modules/users/users.routes';
+import publicRoutes from './modules/public/public.routes';
 import './config/passport';
 
 const connectToDatabase = async () => {
@@ -70,6 +71,7 @@ export function createApp() {
   app.use('/api/reports', reportRoutes);
   app.use('/api/admin', adminRoutes);
   app.use('/api/users', userRoutes);
+  app.use('/api', publicRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

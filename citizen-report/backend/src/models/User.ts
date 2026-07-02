@@ -8,6 +8,7 @@ export interface IUser {
   passwordHash: string;
   displayName: string | null;
   role: Role;
+  permissions: string[];
   emailVerified: boolean;
   tokenVersion: number;
   verifyToken: string | null;
@@ -27,6 +28,7 @@ const UserSchema = new Schema<IUser>(
     passwordHash: { type: String, required: true },
     displayName: { type: String, default: null },
     role: { type: String, enum: Object.values(Role), default: Role.CITIZEN, index: true },
+    permissions: { type: [String], default: [] },
     emailVerified: { type: Boolean, default: false },
     tokenVersion: { type: Number, default: 0 },
     verifyToken: { type: String, default: null },

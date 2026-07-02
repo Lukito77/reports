@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.listReports = listReports;
 exports.getReport = getReport;
 exports.updateStatus = updateStatus;
+exports.deleteReport = deleteReport;
 exports.changeUserRole = changeUserRole;
 exports.listAuditLogs = listAuditLogs;
 exports.stats = stats;
@@ -68,6 +69,12 @@ async function updateStatus(req, res) {
         throw error_1.ApiError.unauthorized();
     const report = await service.updateStatus(req.params.id, req.body.status, req.body.note, req.user.id, req);
     res.json({ report });
+}
+async function deleteReport(req, res) {
+    if (!req.user)
+        throw error_1.ApiError.unauthorized();
+    await service.deleteReport(req.params.id, req.user.id, req);
+    res.status(204).send();
 }
 async function changeUserRole(req, res) {
     if (!req.user)

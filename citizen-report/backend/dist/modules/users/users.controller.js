@@ -6,12 +6,17 @@ exports.eraseAccount = eraseAccount;
 const error_1 = require("../../middleware/error");
 const audit_1 = require("../../lib/audit");
 const models_1 = require("../../models");
+const enums_1 = require("../../models/enums");
 /** Current user's profile. */
 async function me(req, res) {
     if (!req.user)
         throw error_1.ApiError.unauthorized();
-    const user = await models_1.User.findById(req.user.id).select('email displayName role emailVerified createdAt');
-    res.json({ user });
+    const user = await models_1.User.findById(req.user.id).select('email displayName role permissions emailVerified createdAt');
+    if (!user)
+        throw error_1.ApiError.unauthorized();
+    const obj = user.toObject();
+    obj.permissions = (0, enums_1.effectivePermissions)(user.role, user.permissions);
+    res.json({ user: obj });
 }
 /**
  * GDPR data export: returns all personal data we hold for the user, including

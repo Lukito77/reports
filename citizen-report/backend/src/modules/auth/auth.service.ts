@@ -4,6 +4,7 @@
  */
 import bcrypt from 'bcryptjs';
 import { User, RefreshToken, type UserDocument } from '../../models';
+import { effectivePermissions } from '../../models/enums';
 import { env } from '../../config/env';
 import { signAccessToken } from '../../lib/jwt';
 import { randomToken, sha256 } from '../../lib/crypto';
@@ -25,6 +26,7 @@ function publicUser(u: UserDocument) {
     email: u.email,
     displayName: u.displayName,
     role: u.role,
+    permissions: effectivePermissions(u.role, u.permissions),
     emailVerified: u.emailVerified,
     createdAt: u.createdAt,
   };

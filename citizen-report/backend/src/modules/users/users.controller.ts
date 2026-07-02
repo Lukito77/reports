@@ -2,14 +2,18 @@ import { Request, Response } from 'express';
 import { ApiError } from '../../middleware/error';
 import { recordAudit } from '../../lib/audit';
 import { AuditAction, User, Report, RefreshToken, MediaAsset } from '../../models';
+import { effectivePermissions } from '../../models/enums';
 
 /** Current user's profile. */
 export async function me(req: Request, res: Response) {
   if (!req.user) throw ApiError.unauthorized();
   const user = await User.findById(req.user.id).select(
-    'email displayName role emailVerified createdAt',
+    'email displayName role permissions emailVerified createdAt',
   );
-  res.json({ user });
+  if (!user) throw ApiError.unauthorized();
+  const obj = user.toObject() as unknown as Record<string, unknown>;
+  obj.permissions = effectivePermissions(user.role, user.permissions);
+  res.json({ user: obj });
 }
 
 /**

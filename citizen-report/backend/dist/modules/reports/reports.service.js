@@ -41,6 +41,7 @@ exports.listMyReports = listMyReports;
 exports.getReport = getReport;
 exports.listCategories = listCategories;
 exports.hardDeleteReport = hardDeleteReport;
+exports.deleteMyReport = deleteMyReport;
 /**
  * Report domain logic: secure media ingestion (type sniffing, EXIF GPS
  * extraction, face blurring, tamper detection, integrity hashing), persistence,
@@ -311,7 +312,7 @@ async function getReport(id, viewer) {
 /** Public list of categories for the submission form. */
 function listCategories() {
     return models_1.Category.find({ active: true })
-        .select('-_id slug name description')
+        .select('-_id slug name nameEn description')
         .sort({ name: 1 })
         .lean();
 }
@@ -329,5 +330,24 @@ async function hardDeleteReport(id) {
         models_1.ConsentRecord.deleteMany({ reportId: id }),
     ]);
     await models_1.Report.deleteOne({ _id: id });
+}
+/**
+ * A citizen permanently deletes their OWN report (and its media). Anonymous
+ * reports have no owner, so they can only be removed by staff via the admin path.
+ */
+async function deleteMyReport(reportId, user, req) {
+    const report = await models_1.Report.findById(reportId);
+    if (!report)
+        throw error_1.ApiError.notFound('Report not found');
+    if (report.reporterId !== user.id)
+        throw error_1.ApiError.forbidden();
+    await (0, audit_1.recordAudit)({
+        action: models_1.AuditAction.REPORT_DELETED,
+        actorId: user.id,
+        reportId,
+        metadata: { status: report.status, deletedByReporter: true },
+        req,
+    });
+    await hardDeleteReport(reportId);
 }
 //# sourceMappingURL=reports.service.js.map

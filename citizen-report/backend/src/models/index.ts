@@ -9,3 +9,16 @@ export { MediaAsset, type IMediaAsset, type MediaAssetDocument } from './MediaAs
 export { AuditLog, type IAuditLog, type AuditLogDocument } from './AuditLog';
 export { AiAnalysis, type IAiAnalysis, type AiAnalysisDocument } from './AiAnalysis';
 export { ConsentRecord, type IConsentRecord, type ConsentRecordDocument } from './ConsentRecord';
+export {
+  SiteSetting,
+  type ISiteSetting,
+  type SiteSettingDocument,
+  type ITheme,
+  type IBranding,
+  type ILayout,
+  SITE_SETTING_KEY,
+  DEFAULT_THEME,
+  DEFAULT_BRANDING,
+  DEFAULT_LAYOUT,
+} from './SiteSetting';
+export { Content, type IContent, type ContentDocument } from './Content';

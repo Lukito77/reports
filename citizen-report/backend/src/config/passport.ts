@@ -4,8 +4,16 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 const CALLBACK_URL =
   process.env.GOOGLE_CALLBACK_URL || 'https://reports-cyan.vercel.app/api/auth/google/callback';
 
-passport.use(
-  new GoogleStrategy(
+// Google sign-in is optional. passport-oauth2 throws at construction time if the
+// clientID is empty, so only register the strategy when credentials are present
+// (otherwise local/dev boots would crash). Routes check `googleEnabled`.
+export const googleEnabled = Boolean(
+  process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
+);
+
+if (googleEnabled) {
+  passport.use(
+    new GoogleStrategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID || '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
@@ -36,8 +44,9 @@ passport.use(
       } catch (error) {
         return done(error as Error, undefined);
       }
-    }
-  )
-);
+    },
+    ),
+  );
+}
 
 export default passport;
