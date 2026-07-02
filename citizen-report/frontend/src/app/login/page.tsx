@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { ApiError, setAccessToken, API_URL } from '@/lib/api';
-import { getRememberedEmails } from '@/lib/rememberedEmails';
+import { RememberedEmails } from '@/components/RememberedEmails';
 import { useI18n } from '@/lib/i18n';
 
 function LoginForm() {
@@ -20,12 +20,6 @@ function LoginForm() {
   const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [knownEmails, setKnownEmails] = useState<string[]>([]);
-
-  // Load previously-used emails (client-only, to avoid hydration mismatch).
-  useEffect(() => {
-    setKnownEmails(getRememberedEmails());
-  }, []);
 
   // 🔄 ვამოწმებთ URL-ს Google Auth-იდან დაბრუნებისას
   useEffect(() => {
@@ -112,19 +106,13 @@ function LoginForm() {
           {mode === 'otp' ? t.login.otpSubtitle : t.login.subtitle}
         </p>
 
-        {/* Suggestions of previously-used emails (native <datalist> dropdown). */}
-        <datalist id="known-emails">
-          {knownEmails.map((e) => (
-            <option key={e} value={e} />
-          ))}
-        </datalist>
-
         {/* ── Password mode ── */}
         {mode === 'password' && (
           <form onSubmit={submit} className="space-y-4">
             <div>
               <label className="label" htmlFor="email">{t.login.email}</label>
               <input id="email" name="email" type="email" autoComplete="email" list="known-emails" className="input" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <RememberedEmails onPick={setEmail} />
             </div>
             <div>
               <div className="flex items-center justify-between">
@@ -177,6 +165,7 @@ function LoginForm() {
             <div>
               <label className="label" htmlFor="otp-email">{t.login.email}</label>
               <input id="otp-email" name="email" type="email" autoComplete="email" list="known-emails" className="input" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <RememberedEmails onPick={setEmail} />
             </div>
 
             {error && <p className="text-sm text-red-600">{error}</p>}

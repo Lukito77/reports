@@ -29,3 +29,15 @@ export function rememberEmail(email: string): void {
     /* storage full / unavailable — non-fatal */
   }
 }
+
+/** Removes one remembered email and returns the updated list. */
+export function forgetEmail(email: string): string[] {
+  if (typeof window === 'undefined') return [];
+  const next = getRememberedEmails().filter((e) => e !== email.trim().toLowerCase());
+  try {
+    window.localStorage.setItem(KEY, JSON.stringify(next));
+  } catch {
+    /* non-fatal */
+  }
+  return next;
+}

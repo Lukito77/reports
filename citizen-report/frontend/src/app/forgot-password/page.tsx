@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { apiFetch, ApiError } from '@/lib/api';
+import { RememberedEmails } from '@/components/RememberedEmails';
 import { useI18n } from '@/lib/i18n';
 
 export default function ForgotPasswordPage() {
@@ -52,12 +53,16 @@ export default function ForgotPasswordPage() {
               <label className="label" htmlFor="email">{t.forgotPassword.email}</label>
               <input
                 id="email"
+                name="email"
                 type="email"
+                autoComplete="email"
+                list="known-emails"
                 className="input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
+              <RememberedEmails onPick={setEmail} />
             </div>
 
             {error && <p className="text-sm text-red-600">{error}</p>}
