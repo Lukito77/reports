@@ -152,3 +152,15 @@ export async function resetPassword(req: Request, res: Response) {
   await authService.resetPassword(req.body.token, req.body.password);
   res.json({ message: 'Password updated. Please sign in.' });
 }
+
+export async function requestOtp(req: Request, res: Response) {
+  await authService.requestOtp(req.body.email);
+  res.json({ message: 'If an account exists, a sign-in code has been sent.' });
+}
+
+export async function verifyOtp(req: Request, res: Response) {
+  const { email, code } = req.body;
+  const { user, tokens } = await authService.verifyOtp(email, code, reqMeta(req));
+  setRefreshCookie(res, tokens.refreshToken, tokens.refreshExpiresAt);
+  res.json({ user, accessToken: tokens.accessToken });
+}

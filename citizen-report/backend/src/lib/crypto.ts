@@ -44,3 +44,8 @@ export function sha256(input: string | Buffer): string {
 export function randomToken(bytes = 32): string {
   return crypto.randomBytes(bytes).toString('hex');
 }
+
+/** Cryptographically strong numeric one-time code, zero-padded to `digits`. */
+export function randomOtp(digits = 6): string {
+  return crypto.randomInt(0, 10 ** digits).toString().padStart(digits, '0');
+}

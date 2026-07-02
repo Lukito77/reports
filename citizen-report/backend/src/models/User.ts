@@ -15,6 +15,9 @@ export interface IUser {
   verifyTokenExpiry: Date | null;
   resetToken: string | null;
   resetTokenExpiry: Date | null;
+  otpCodeHash: string | null;
+  otpExpiry: Date | null;
+  otpAttempts: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,6 +38,10 @@ const UserSchema = new Schema<IUser>(
     verifyTokenExpiry: { type: Date, default: null },
     resetToken: { type: String, default: null },
     resetTokenExpiry: { type: Date, default: null },
+    // Passwordless email one-time code (admin/passwordless sign-in).
+    otpCodeHash: { type: String, default: null },
+    otpExpiry: { type: Date, default: null },
+    otpAttempts: { type: Number, default: 0 },
   },
 );
 applyBaseConfig(UserSchema, true);

@@ -36,6 +36,17 @@ export async function sendVerificationEmail(to: string, token: string): Promise<
   );
 }
 
+export async function sendOtpEmail(to: string, code: string): Promise<void> {
+  await send(
+    to,
+    'Your Citizen Report sign-in code',
+    `<p>Your one-time sign-in code is:</p>
+     <p style="font-size:28px;font-weight:bold;letter-spacing:6px;margin:12px 0">${code}</p>
+     <p>This code expires in 10 minutes. If you did not request it, you can safely ignore this email.</p>`,
+    `Your Citizen Report sign-in code is ${code}. It expires in 10 minutes.`,
+  );
+}
+
 export async function sendPasswordResetEmail(to: string, token: string): Promise<void> {
   const url = `${env.APP_BASE_URL}/reset-password?token=${encodeURIComponent(token)}`;
   await send(

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPasswordSchema = exports.forgotPasswordSchema = exports.verifyEmailSchema = exports.loginSchema = exports.registerSchema = void 0;
+exports.otpVerifySchema = exports.otpRequestSchema = exports.resetPasswordSchema = exports.forgotPasswordSchema = exports.verifyEmailSchema = exports.loginSchema = exports.registerSchema = void 0;
 const zod_1 = require("zod");
 const password = zod_1.z
     .string()
@@ -28,5 +28,12 @@ exports.forgotPasswordSchema = zod_1.z.object({
 exports.resetPasswordSchema = zod_1.z.object({
     token: zod_1.z.string().min(10).max(200),
     password,
+});
+exports.otpRequestSchema = zod_1.z.object({
+    email: zod_1.z.string().email().toLowerCase().max(255),
+});
+exports.otpVerifySchema = zod_1.z.object({
+    email: zod_1.z.string().email().toLowerCase().max(255),
+    code: zod_1.z.string().regex(/^\d{6}$/, 'Code must be 6 digits'),
 });
 //# sourceMappingURL=auth.schema.js.map

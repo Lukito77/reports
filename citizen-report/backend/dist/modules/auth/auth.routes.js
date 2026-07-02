@@ -123,5 +123,8 @@ router.post('/logout', ctrl.logout);
 router.post('/verify-email', (0, validate_1.validate)({ body: auth_schema_1.verifyEmailSchema }), ctrl.verifyEmail);
 router.post('/forgot-password', (0, validate_1.validate)({ body: auth_schema_1.forgotPasswordSchema }), ctrl.forgotPassword);
 router.post('/reset-password', (0, validate_1.validate)({ body: auth_schema_1.resetPasswordSchema }), ctrl.resetPassword);
+// Passwordless email one-time-code sign-in (used for admin/passwordless login).
+router.post('/otp/request', (0, validate_1.validate)({ body: auth_schema_1.otpRequestSchema }), ctrl.requestOtp);
+router.post('/otp/verify', (0, validate_1.validate)({ body: auth_schema_1.otpVerifySchema }), ctrl.verifyOtp);
 exports.default = router;
 //# sourceMappingURL=auth.routes.js.map

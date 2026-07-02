@@ -10,6 +10,8 @@ exports.logout = logout;
 exports.verifyEmail = verifyEmail;
 exports.forgotPassword = forgotPassword;
 exports.resetPassword = resetPassword;
+exports.requestOtp = requestOtp;
+exports.verifyOtp = verifyOtp;
 /**
  * Auth domain logic: registration, login, refresh-token rotation (with reuse
  * detection), email verification, and password reset.
@@ -24,6 +26,8 @@ const error_1 = require("../../middleware/error");
 const mailer_1 = require("../../lib/mailer");
 const BCRYPT_COST = 12;
 const RESET_TTL_MS = 60 * 60 * 1000;
+const OTP_TTL_MS = 10 * 60 * 1000;
+const OTP_MAX_ATTEMPTS = 5;
 function publicUser(u) {
     return {
         id: u.id,
@@ -143,5 +147,38 @@ async function resetPassword(token, password) {
         $inc: { tokenVersion: 1 },
     });
     await models_1.RefreshToken.updateMany({ userId: user.id, revokedAt: null }, { revokedAt: new Date() });
+}
+/**
+ * Sends a one-time sign-in code to the account's email. Always resolves without
+ * revealing whether the account exists (no user enumeration).
+ */
+async function requestOtp(email) {
+    const user = await models_1.User.findOne({ email });
+    if (!user)
+        return;
+    const code = (0, crypto_1.randomOtp)(6);
+    await models_1.User.updateOne({ _id: user.id }, { otpCodeHash: (0, crypto_1.sha256)(code), otpExpiry: new Date(Date.now() + OTP_TTL_MS), otpAttempts: 0 });
+    await (0, mailer_1.sendOtpEmail)(email, code);
+}
+/** Verifies an emailed one-time code and, on success, issues a session. */
+async function verifyOtp(email, code, meta) {
+    const user = await models_1.User.findOne({ email });
+    if (!user || !user.otpCodeHash || !user.otpExpiry || user.otpExpiry < new Date()) {
+        throw error_1.ApiError.badRequest('Invalid or expired code');
+    }
+    if ((user.otpAttempts ?? 0) >= OTP_MAX_ATTEMPTS) {
+        await models_1.User.updateOne({ _id: user.id }, { otpCodeHash: null, otpExpiry: null, otpAttempts: 0 });
+        throw error_1.ApiError.badRequest('Too many attempts. Please request a new code.');
+    }
+    if ((0, crypto_1.sha256)(code) !== user.otpCodeHash) {
+        await models_1.User.updateOne({ _id: user.id }, { $inc: { otpAttempts: 1 } });
+        throw error_1.ApiError.badRequest('Invalid or expired code');
+    }
+    // Success: burn the code and mark the email verified (proven via the code).
+    await models_1.User.updateOne({ _id: user.id }, { otpCodeHash: null, otpExpiry: null, otpAttempts: 0, emailVerified: true });
+    user.emailVerified = true;
+    const family = (0, crypto_1.randomToken)(16);
+    const tokens = await issueTokens(user, family, meta);
+    return { user: publicUser(user), tokens };
 }
 //# sourceMappingURL=auth.service.js.map

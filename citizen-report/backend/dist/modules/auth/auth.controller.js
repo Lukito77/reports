@@ -44,6 +44,8 @@ exports.logout = logout;
 exports.verifyEmail = verifyEmail;
 exports.forgotPassword = forgotPassword;
 exports.resetPassword = resetPassword;
+exports.requestOtp = requestOtp;
+exports.verifyOtp = verifyOtp;
 const env_1 = require("../../config/env");
 const authService = __importStar(require("./auth.service"));
 const models_1 = require("../../models"); // წამოიღებს მოდელებს შენი პროექტიდან
@@ -172,5 +174,15 @@ async function forgotPassword(req, res) {
 async function resetPassword(req, res) {
     await authService.resetPassword(req.body.token, req.body.password);
     res.json({ message: 'Password updated. Please sign in.' });
+}
+async function requestOtp(req, res) {
+    await authService.requestOtp(req.body.email);
+    res.json({ message: 'If an account exists, a sign-in code has been sent.' });
+}
+async function verifyOtp(req, res) {
+    const { email, code } = req.body;
+    const { user, tokens } = await authService.verifyOtp(email, code, reqMeta(req));
+    setRefreshCookie(res, tokens.refreshToken, tokens.refreshExpiresAt);
+    res.json({ user, accessToken: tokens.accessToken });
 }
 //# sourceMappingURL=auth.controller.js.map

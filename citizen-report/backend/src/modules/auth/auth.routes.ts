@@ -11,6 +11,8 @@ import {
   verifyEmailSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  otpRequestSchema,
+  otpVerifySchema,
 } from './auth.schema';
 import * as ctrl from './auth.controller';
 
@@ -119,5 +121,9 @@ router.post('/verify-email', validate({ body: verifyEmailSchema }), ctrl.verifyE
 
 router.post('/forgot-password', validate({ body: forgotPasswordSchema }), ctrl.forgotPassword);
 router.post('/reset-password', validate({ body: resetPasswordSchema }), ctrl.resetPassword);
+
+// Passwordless email one-time-code sign-in (used for admin/passwordless login).
+router.post('/otp/request', validate({ body: otpRequestSchema }), ctrl.requestOtp);
+router.post('/otp/verify', validate({ body: otpVerifySchema }), ctrl.verifyOtp);
 
 export default router;

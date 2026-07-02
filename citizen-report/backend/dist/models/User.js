@@ -17,6 +17,10 @@ const UserSchema = new mongoose_1.Schema({
     verifyTokenExpiry: { type: Date, default: null },
     resetToken: { type: String, default: null },
     resetTokenExpiry: { type: Date, default: null },
+    // Passwordless email one-time code (admin/passwordless sign-in).
+    otpCodeHash: { type: String, default: null },
+    otpExpiry: { type: Date, default: null },
+    otpAttempts: { type: Number, default: 0 },
 });
 (0, _shared_1.applyBaseConfig)(UserSchema, true);
 // ⚡ მხოლოდ ჩვეულებრივი ინდექსები უნიკალურობის (unique) გარეშე, რათა null-ებზე არასდროს გაჭედოს

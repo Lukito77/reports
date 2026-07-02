@@ -13,6 +13,8 @@ interface AuthContextValue {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName?: string, captchaToken?: string) => Promise<{ message: string }>;
+  requestOtp: (email: string) => Promise<{ message: string }>;
+  loginWithOtp: (email: string, code: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -69,6 +71,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const requestOtp = useCallback(async (email: string) => {
+    return apiFetch<{ message: string }>('/auth/otp/request', {
+      method: 'POST',
+      body: { email },
+    });
+  }, []);
+
+  const loginWithOtp = useCallback(async (email: string, code: string) => {
+    const res = await apiFetch<{ accessToken: string; user: User }>('/auth/otp/verify', {
+      method: 'POST',
+      body: { email, code },
+    });
+    setAccessToken(res.accessToken);
+    setUser(res.user);
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await apiFetch('/auth/logout', { method: 'POST', retry: false });
@@ -80,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser: loadMe }}>
+    <AuthContext.Provider value={{ user, loading, login, register, requestOtp, loginWithOtp, logout, refreshUser: loadMe }}>
       {children}
     </AuthContext.Provider>
   );

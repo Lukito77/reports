@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendVerificationEmail = sendVerificationEmail;
+exports.sendOtpEmail = sendOtpEmail;
 exports.sendPasswordResetEmail = sendPasswordResetEmail;
 /**
  * Email delivery. If SMTP is not configured (dev), links are logged to stdout
@@ -32,6 +33,11 @@ async function sendVerificationEmail(to, token) {
     await send(to, 'Verify your Citizen Report email', `<p>Welcome to Citizen Report.</p><p>Please verify your email by clicking the link below:</p>
      <p><a href="${url}">Verify my email</a></p>
      <p>This link expires in 24 hours. If you did not create an account, ignore this email.</p>`, `Verify your email: ${url}`);
+}
+async function sendOtpEmail(to, code) {
+    await send(to, 'Your Citizen Report sign-in code', `<p>Your one-time sign-in code is:</p>
+     <p style="font-size:28px;font-weight:bold;letter-spacing:6px;margin:12px 0">${code}</p>
+     <p>This code expires in 10 minutes. If you did not request it, you can safely ignore this email.</p>`, `Your Citizen Report sign-in code is ${code}. It expires in 10 minutes.`);
 }
 async function sendPasswordResetEmail(to, token) {
     const url = `${env_1.env.APP_BASE_URL}/reset-password?token=${encodeURIComponent(token)}`;

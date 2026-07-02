@@ -7,6 +7,7 @@ exports.encrypt = encrypt;
 exports.decrypt = decrypt;
 exports.sha256 = sha256;
 exports.randomToken = randomToken;
+exports.randomOtp = randomOtp;
 /**
  * AES-256-GCM field encryption for sensitive data at rest (e.g. anonymous
  * reporter contact, detected plate text), plus token hashing helpers.
@@ -50,5 +51,9 @@ function sha256(input) {
 /** Cryptographically strong random URL-safe token. */
 function randomToken(bytes = 32) {
     return crypto_1.default.randomBytes(bytes).toString('hex');
+}
+/** Cryptographically strong numeric one-time code, zero-padded to `digits`. */
+function randomOtp(digits = 6) {
+    return crypto_1.default.randomInt(0, 10 ** digits).toString().padStart(digits, '0');
 }
 //# sourceMappingURL=crypto.js.map

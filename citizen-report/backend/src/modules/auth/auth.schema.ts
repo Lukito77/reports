@@ -33,5 +33,14 @@ export const resetPasswordSchema = z.object({
   password,
 });
 
+export const otpRequestSchema = z.object({
+  email: z.string().email().toLowerCase().max(255),
+});
+
+export const otpVerifySchema = z.object({
+  email: z.string().email().toLowerCase().max(255),
+  code: z.string().regex(/^\d{6}$/, 'Code must be 6 digits'),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
