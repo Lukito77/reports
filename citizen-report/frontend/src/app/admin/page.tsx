@@ -1,269 +1,246 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  XAxis,
+  YAxis,
+} from 'recharts';
+import { FileText, Users, Clock, CheckCircle2 } from 'lucide-react';
 import { apiFetch, ApiError } from '@/lib/api';
-import { useAuth } from '@/lib/auth';
-import { useI18n, categoryLabel } from '@/lib/i18n';
-import { StatusBadge } from '@/components/StatusBadge';
-import type { Category, Paginated, Report, ReportStatus } from '@/lib/types';
+import { useI18n } from '@/lib/i18n';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+  type ChartConfig,
+} from '@/components/ui/chart';
+import type { AnalyticsData, ReportStatus } from '@/lib/types';
 
-const STATUSES: ReportStatus[] = [
-  'SUBMITTED',
-  'UNDER_REVIEW',
-  'INFO_REQUESTED',
-  'APPROVED',
-  'REJECTED',
-  'CLOSED',
-];
+const STATUS_COLORS: Record<ReportStatus, string> = {
+  SUBMITTED: '#94a3b8',
+  UNDER_REVIEW: '#3b82f6',
+  INFO_REQUESTED: '#f59e0b',
+  APPROVED: '#22c55e',
+  REJECTED: '#ef4444',
+  CLOSED: '#64748b',
+};
 
-interface FullReport extends Report {
-  aiAnalyses?: { id: string; type: string; result: unknown; confidence?: number | null }[];
-}
-
-export default function AdminPage() {
-  const { user, loading } = useAuth();
+export default function AdminDashboardPage() {
   const { t, lang } = useI18n();
-  const router = useRouter();
-
-  const [stats, setStats] = useState<{ total: number; byStatus: Record<string, number> } | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [list, setList] = useState<Paginated<Report> | null>(null);
-  const [filters, setFilters] = useState<{ status?: string; categorySlug?: string; q?: string }>({});
-  const [selected, setSelected] = useState<FullReport | null>(null);
-  const [note, setNote] = useState('');
+  const [data, setData] = useState<AnalyticsData | null>(null);
+  const [days, setDays] = useState(30);
   const [error, setError] = useState<string | null>(null);
 
-  // Guard: staff only.
-  useEffect(() => {
-    if (loading) return;
-    if (!user) router.replace('/login');
-    else if (user.role !== 'ADMIN' && user.role !== 'MODERATOR') router.replace('/dashboard');
-  }, [loading, user, router]);
-
-  const loadList = useCallback(async () => {
-    const qs = new URLSearchParams();
-    if (filters.status) qs.set('status', filters.status);
-    if (filters.categorySlug) qs.set('categorySlug', filters.categorySlug);
-    if (filters.q) qs.set('q', filters.q);
+  const load = useCallback(async (d: number) => {
     try {
-      const [reports, s] = await Promise.all([
-        apiFetch<Paginated<Report>>(`/admin/reports?${qs.toString()}`),
-        apiFetch<{ total: number; byStatus: Record<string, number> }>('/admin/stats'),
-      ]);
-      setList(reports);
-      setStats(s);
+      setData(await apiFetch<AnalyticsData>(`/admin/analytics?days=${d}`));
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : t.admin.loadFailed);
+      setError(err instanceof ApiError ? err.message : 'Failed to load analytics');
     }
-  }, [filters, t]);
+  }, []);
 
   useEffect(() => {
-    if (user && (user.role === 'ADMIN' || user.role === 'MODERATOR')) {
-      apiFetch<{ categories: Category[] }>('/reports/categories').then((d) => setCategories(d.categories));
-      loadList();
-    }
-  }, [user, loadList]);
+    load(days);
+  }, [load, days]);
 
-  async function openReport(id: string) {
-    setNote('');
-    const { report } = await apiFetch<{ report: FullReport }>(`/admin/reports/${id}`);
-    setSelected(report);
-  }
+  const tr = (ka: string, en: string) => (lang === 'ka' ? ka : en);
 
-  async function changeStatus(status: ReportStatus) {
-    if (!selected) return;
-    try {
-      const { report } = await apiFetch<{ report: Report }>(`/admin/reports/${selected.id}/status`, {
-        method: 'PATCH',
-        body: { status, note: note || undefined },
-      });
-      setSelected({ ...selected, status: report.status });
-      await loadList();
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : t.admin.statusUpdateFailed);
-    }
-  }
+  if (error) return <p className="text-sm text-red-600">{error}</p>;
+  if (!data) return <p className="text-center text-slate-500">{t.admin.loading}</p>;
 
-  async function deleteReport() {
-    if (!selected) return;
-    if (!window.confirm(t.admin.deleteConfirm)) return;
-    try {
-      await apiFetch(`/admin/reports/${selected.id}`, { method: 'DELETE' });
-      setSelected(null);
-      await loadList();
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : t.admin.deleteFailed);
-    }
-  }
+  const reportsConfig = {
+    count: { label: tr('განაცხადები', 'Reports'), color: 'rgb(var(--brand-600))' },
+  } satisfies ChartConfig;
+  const usersConfig = {
+    count: { label: tr('მომხმარებლები', 'Users'), color: 'rgb(var(--brand-500))' },
+  } satisfies ChartConfig;
+  const categoryConfig = {
+    count: { label: tr('განაცხადები', 'Reports'), color: 'rgb(var(--brand-600))' },
+  } satisfies ChartConfig;
+  const statusConfig = Object.fromEntries(
+    data.byStatus.map((s) => [s.status, { label: t.status[s.status], color: STATUS_COLORS[s.status] }]),
+  ) satisfies ChartConfig;
 
-  if (loading || !user) return <p className="text-center text-slate-500">{t.admin.loading}</p>;
+  const stats = [
+    { label: tr('სულ განაცხადი', 'Total reports'), value: data.totals.reports, icon: FileText },
+    { label: tr('მომხმარებლები', 'Users'), value: data.totals.users, icon: Users },
+    { label: tr('განსახილველი', 'Pending review'), value: data.totals.pendingReview, icon: Clock },
+    { label: tr('დამტკიცებული', 'Approved'), value: data.totals.approved, icon: CheckCircle2 },
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t.admin.title}</h1>
-        <span className="badge bg-brand-100 text-brand-700">{user.role}</span>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">{tr('მთავარი დაფა', 'Dashboard')}</h1>
+        <select
+          className="input w-auto"
+          value={days}
+          onChange={(e) => setDays(Number(e.target.value))}
+        >
+          <option value={7}>{tr('ბოლო 7 დღე', 'Last 7 days')}</option>
+          <option value={30}>{tr('ბოლო 30 დღე', 'Last 30 days')}</option>
+          <option value={90}>{tr('ბოლო 90 დღე', 'Last 90 days')}</option>
+        </select>
       </div>
 
-      {/* Stats */}
-      {stats && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
-          <div className="card py-3 text-center">
-            <div className="text-2xl font-bold">{stats.total}</div>
-            <div className="text-xs text-slate-500">{t.admin.total}</div>
-          </div>
-          {STATUSES.map((s) => (
-            <div key={s} className="card py-3 text-center">
-              <div className="text-2xl font-bold">{stats.byStatus[s] ?? 0}</div>
-              <div className="text-xs text-slate-500">{t.status[s]}</div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Filters */}
-      <div className="card flex flex-wrap items-end gap-3">
-        <div>
-          <label className="label">{t.admin.status}</label>
-          <select
-            className="input"
-            value={filters.status ?? ''}
-            onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value || undefined }))}
-          >
-            <option value="">{t.admin.all}</option>
-            {STATUSES.map((s) => <option key={s} value={s}>{t.status[s]}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="label">{t.admin.category}</label>
-          <select
-            className="input"
-            value={filters.categorySlug ?? ''}
-            onChange={(e) => setFilters((f) => ({ ...f, categorySlug: e.target.value || undefined }))}
-          >
-            <option value="">{t.admin.all}</option>
-            {categories.map((c) => <option key={c.slug} value={c.slug}>{categoryLabel(c, lang)}</option>)}
-          </select>
-        </div>
-        <div className="flex-1">
-          <label className="label">{t.admin.searchDescription}</label>
-          <input
-            className="input"
-            value={filters.q ?? ''}
-            onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value || undefined }))}
-          />
-        </div>
-        <button className="btn-primary" onClick={loadList}>{t.admin.apply}</button>
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {stats.map((s) => {
+          const Icon = s.icon;
+          return (
+            <Card key={s.label}>
+              <CardContent className="flex items-center justify-between p-5">
+                <div>
+                  <div className="text-3xl font-bold">{s.value}</div>
+                  <div className="mt-1 text-xs text-slate-500">{s.label}</div>
+                </div>
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-50 text-brand-600">
+                  <Icon className="h-5 w-5" />
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {/* Reports over time */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{tr('განაცხადები დროის მიხედვით', 'Reports over time')}</CardTitle>
+          <CardDescription>{tr(`ბოლო ${days} დღე`, `Last ${days} days`)}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer config={reportsConfig} className="aspect-[3/1] w-full">
+            <AreaChart data={data.reportsOverTime} margin={{ left: 0, right: 12, top: 8 }}>
+              <defs>
+                <linearGradient id="fillReports" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--color-count)" stopOpacity={0.35} />
+                  <stop offset="95%" stopColor="var(--color-count)" stopOpacity={0.03} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey="date"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                minTickGap={24}
+                tickFormatter={(v: string) => v.slice(5)}
+              />
+              <YAxis tickLine={false} axisLine={false} width={28} allowDecimals={false} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Area
+                dataKey="count"
+                type="monotone"
+                stroke="var(--color-count)"
+                strokeWidth={2}
+                fill="url(#fillReports)"
+              />
+            </AreaChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* List */}
-        <div className="space-y-3">
-          {list?.items.map((r) => (
-            <button
-              key={r.id}
-              onClick={() => openReport(r.id)}
-              className={`card w-full text-left transition hover:shadow-md ${selected?.id === r.id ? 'ring-2 ring-brand-500' : ''}`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-semibold">{categoryLabel(r.category, lang)}</span>
-                <StatusBadge status={r.status} />
-              </div>
-              <p className="mt-1 line-clamp-2 text-sm text-slate-600">{r.description}</p>
-              <p className="mt-2 text-xs text-slate-400">
-                {new Date(r.createdAt).toLocaleString()}
-                {r.reporter ? ` · ${r.reporter.email}` : ` · ${t.admin.anonymous}`}
-              </p>
-            </button>
-          ))}
-          {list && list.items.length === 0 && (
-            <p className="text-center text-slate-500">{t.admin.noMatch}</p>
-          )}
-        </div>
+        {/* By status (donut) */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{tr('სტატუსების მიხედვით', 'By status')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={statusConfig} className="mx-auto aspect-square max-h-[300px]">
+              <PieChart>
+                <ChartTooltip content={<ChartTooltipContent nameKey="status" hideLabel />} />
+                <Pie
+                  data={data.byStatus}
+                  dataKey="count"
+                  nameKey="status"
+                  innerRadius={55}
+                  strokeWidth={3}
+                >
+                  {data.byStatus.map((s) => (
+                    <Cell key={s.status} fill={STATUS_COLORS[s.status]} />
+                  ))}
+                </Pie>
+                <ChartLegend content={<ChartLegendContent nameKey="status" />} className="flex-wrap" />
+              </PieChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
 
-        {/* Detail / review */}
-        <div className="lg:sticky lg:top-4 lg:self-start">
-          {selected ? (
-            <div className="card space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="font-bold">{categoryLabel(selected.category, lang)}</h2>
-                <StatusBadge status={selected.status} />
-              </div>
-              <p className="text-sm text-slate-700">{selected.description}</p>
-
-              {selected.summary && (
-                <p className="rounded bg-slate-50 p-2 text-xs text-slate-600">{selected.summary}</p>
-              )}
-
-              {(selected.latitude != null || selected.address) && (
-                <p className="text-xs text-slate-500">
-                  📍 {selected.address} {selected.latitude != null && `(${selected.latitude.toFixed(5)}, ${selected.longitude?.toFixed(5)})`}
-                </p>
-              )}
-
-              {/* Evidence (originals for staff) */}
-              {selected.media && selected.media.length > 0 && (
-                <div className="grid grid-cols-3 gap-2">
-                  {selected.media.map((m) =>
-                    m.kind === 'VIDEO' ? (
-                      <video key={m.id} src={m.url} controls className="w-full rounded" />
-                    ) : (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img key={m.id} src={m.url} alt="evidence" className="h-24 w-full rounded object-cover" />
-                    ),
-                  )}
-                </div>
-              )}
-
-              {/* AI assistance (advisory) */}
-              {selected.aiAnalyses && selected.aiAnalyses.length > 0 && (
-                <div className="rounded border border-slate-200 p-3 text-xs">
-                  <p className="mb-1 font-semibold text-slate-600">{t.admin.aiAssistance}</p>
-                  <ul className="space-y-1 text-slate-600">
-                    {selected.aiAnalyses.map((a) => (
-                      <li key={a.id}>
-                        <span className="font-medium">{a.type}:</span>{' '}
-                        <code className="text-[11px]">{JSON.stringify(a.result)}</code>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Reviewer actions */}
-              <div className="space-y-2 border-t border-slate-200 pt-3">
-                <label className="label">{t.admin.reviewerNoteLabel}</label>
-                <textarea className="input min-h-16" value={note} onChange={(e) => setNote(e.target.value)} />
-                <div className="flex flex-wrap gap-2">
-                  <button className="btn-secondary" onClick={() => changeStatus('UNDER_REVIEW')}>{t.admin.markReviewing}</button>
-                  <button className="btn-secondary" onClick={() => changeStatus('INFO_REQUESTED')}>{t.admin.requestInfo}</button>
-                  <button className="btn-primary bg-green-600 hover:bg-green-700" onClick={() => changeStatus('APPROVED')}>{t.admin.approve}</button>
-                  <button className="btn-primary bg-red-600 hover:bg-red-700" onClick={() => changeStatus('REJECTED')}>{t.admin.reject}</button>
-                  <button className="btn-secondary" onClick={() => changeStatus('CLOSED')}>{t.admin.close}</button>
-                </div>
-                {user.role === 'ADMIN' && (
-                  <div className="border-t border-slate-200 pt-3">
-                    <button className="btn-primary bg-red-700 hover:bg-red-800" onClick={deleteReport}>
-                      {t.admin.deletePermanently}
-                    </button>
-                    <p className="mt-1 text-[11px] text-slate-400">
-                      {t.admin.deleteHint}
-                    </p>
-                  </div>
-                )}
-                <p className="text-[11px] text-slate-400">
-                  {t.admin.approvalHint}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="card text-center text-slate-500">{t.admin.selectPrompt}</div>
-          )}
-        </div>
+        {/* By category (bar) */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{tr('კატეგორიების მიხედვით', 'By category')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={categoryConfig} className="aspect-square max-h-[300px] w-full">
+              <BarChart
+                data={data.byCategory}
+                layout="vertical"
+                margin={{ left: 8, right: 12 }}
+              >
+                <CartesianGrid horizontal={false} />
+                <XAxis type="number" hide allowDecimals={false} />
+                <YAxis
+                  type="category"
+                  dataKey={lang === 'en' ? 'nameEn' : 'name'}
+                  tickLine={false}
+                  axisLine={false}
+                  width={110}
+                  tickFormatter={(v: string) => (v && v.length > 16 ? `${v.slice(0, 15)}…` : v)}
+                />
+                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                <Bar dataKey="count" fill="var(--color-count)" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* User growth */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{tr('მომხმარებლების ზრდა', 'User growth')}</CardTitle>
+          <CardDescription>{tr('ბოლო 12 თვე (ახალი ანგარიშები)', 'Last 12 months (new accounts)')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer config={usersConfig} className="aspect-[3/1] w-full">
+            <LineChart data={data.usersOverTime} margin={{ left: 0, right: 12, top: 8 }}>
+              <CartesianGrid vertical={false} />
+              <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+              <YAxis tickLine={false} axisLine={false} width={28} allowDecimals={false} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Line
+                dataKey="count"
+                type="monotone"
+                stroke="var(--color-count)"
+                strokeWidth={2}
+                dot={false}
+              />
+            </LineChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
     </div>
   );
 }

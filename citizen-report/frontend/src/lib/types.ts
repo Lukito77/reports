@@ -1,5 +1,16 @@
 export type Role = 'CITIZEN' | 'MODERATOR' | 'ADMIN';
 
+export type Permission =
+  | 'reports.view'
+  | 'reports.moderate'
+  | 'reports.delete'
+  | 'users.manage'
+  | 'content.manage'
+  | 'settings.manage'
+  | 'collections.manage'
+  | 'audit.view'
+  | 'analytics.view';
+
 export type ReportStatus =
   | 'SUBMITTED'
   | 'UNDER_REVIEW'
@@ -13,8 +24,88 @@ export interface User {
   email: string;
   displayName: string | null;
   role: Role;
+  permissions?: Permission[];
   emailVerified: boolean;
   createdAt: string;
+}
+
+// ── Admin / control-panel types ─────────────────────────────────────────────
+
+export interface Theme {
+  brand50: string;
+  brand100: string;
+  brand500: string;
+  brand600: string;
+  brand700: string;
+  background: string;
+  foreground: string;
+  accent: string;
+  fontFamily: string;
+  fontSizeBase: number;
+  radius: number;
+}
+
+export interface Branding {
+  siteName: string;
+  logoEmoji: string;
+  tagline: string;
+}
+
+export interface LayoutSettings {
+  containerWidth: 'narrow' | 'normal' | 'wide' | 'full';
+  showFooter: boolean;
+  showLanguageSwitcher: boolean;
+  showReportButton: boolean;
+}
+
+export interface SiteSettings {
+  theme: Theme;
+  branding: Branding;
+  layout: LayoutSettings;
+}
+
+export type ContentType = 'text' | 'textarea' | 'html';
+
+export interface ContentRow {
+  id: string;
+  key: string;
+  group: string;
+  label: string;
+  type: ContentType;
+  valueKa: string;
+  valueEn: string;
+  order: number;
+}
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  displayName: string | null;
+  role: Role;
+  permissions: Permission[];
+  effectivePermissions: Permission[];
+  emailVerified: boolean;
+  createdAt: string;
+}
+
+export interface CollectionMeta {
+  name: string;
+  label: string;
+  readOnly: boolean;
+}
+
+export interface AnalyticsData {
+  totals: {
+    reports: number;
+    users: number;
+    categories: number;
+    pendingReview: number;
+    approved: number;
+  };
+  byStatus: { status: ReportStatus; count: number }[];
+  byCategory: { name: string; nameEn: string | null; count: number }[];
+  reportsOverTime: { date: string; count: number }[];
+  usersOverTime: { month: string; count: number }[];
 }
 
 export interface Category {

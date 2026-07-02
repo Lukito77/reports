@@ -1,6 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
+import { API_URL } from './api';
 
 const translations = {
   en: {
@@ -87,6 +88,32 @@ const translations = {
       or: 'or',
       googleSignIn: 'Sign in with Google',
       googleError: 'Google sign-in failed. Please try again.',
+      forgotLink: 'Forgot password?',
+    },
+    forgotPassword: {
+      title: 'Reset your password',
+      subtitle: "Enter your email address and we'll send you a link to reset your password.",
+      email: 'Email',
+      submit: 'Send reset link',
+      sending: 'Sending…',
+      sent: 'If an account exists for that email, a password reset link is on its way. Please check your inbox (and spam folder).',
+      backToLogin: 'Back to sign in',
+      error: 'Something went wrong. Please try again.',
+    },
+    resetPassword: {
+      title: 'Choose a new password',
+      subtitle: 'Enter a new password for your account.',
+      password: 'New password',
+      confirm: 'Confirm new password',
+      hint: 'At least 10 characters, with an uppercase letter, a lowercase letter, and a number.',
+      submit: 'Update password',
+      updating: 'Updating…',
+      success: 'Your password has been updated. You can now sign in with your new password.',
+      signIn: 'Sign in',
+      missingToken: 'This reset link is invalid or incomplete. Please request a new one.',
+      mismatch: 'Passwords do not match.',
+      error: 'Could not reset your password. The link may have expired.',
+      requestNew: 'Request a new link',
     },
     footer: {
       disclaimer: 'Citizen Report helps find solutions — it does not fine or assign blame. All enforcement decisions are made by authorized officials.',
@@ -248,6 +275,32 @@ const translations = {
       or: 'ან',
       googleSignIn: 'Google-ით შესვლა',
       googleError: 'Google-ით ავტორიზაცია ვერ მოხერხდა. გთხოვთ, სცადოთ თავიდან.',
+      forgotLink: 'დაგავიწყდათ პაროლი?',
+    },
+    forgotPassword: {
+      title: 'პაროლის აღდგენა',
+      subtitle: 'შეიყვანეთ თქვენი ელ-ფოსტა და გამოგიგზავნით პაროლის აღდგენის ბმულს.',
+      email: 'ელ-ფოსტა',
+      submit: 'აღდგენის ბმულის გაგზავნა',
+      sending: 'იგზავნება…',
+      sent: 'თუ ამ ელ-ფოსტაზე ანგარიში არსებობს, პაროლის აღდგენის ბმული გზაშია. გთხოვთ, შეამოწმოთ თქვენი ფოსტა (მათ შორის სპამის საქაღალდე).',
+      backToLogin: 'შესვლის გვერდზე დაბრუნება',
+      error: 'რაღაც შეფერხდა. გთხოვთ, სცადოთ თავიდან.',
+    },
+    resetPassword: {
+      title: 'აირჩიეთ ახალი პაროლი',
+      subtitle: 'შეიყვანეთ ახალი პაროლი თქვენი ანგარიშისთვის.',
+      password: 'ახალი პაროლი',
+      confirm: 'გაიმეორეთ ახალი პაროლი',
+      hint: 'მინიმუმ 10 სიმბოლო, დიდი ასო, პატარა ასო და ციფრი.',
+      submit: 'პაროლის განახლება',
+      updating: 'მიმდინარეობს…',
+      success: 'თქვენი პაროლი განახლდა. ახლა შეგიძლიათ შეხვიდეთ ახალი პაროლით.',
+      signIn: 'შესვლა',
+      missingToken: 'აღდგენის ბმული არასწორია ან არასრულია. გთხოვთ, მოითხოვოთ ახალი.',
+      mismatch: 'პაროლები არ ემთხვევა.',
+      error: 'პაროლის აღდგენა ვერ მოხერხდა. ბმულს შესაძლოა ვადა გაუვიდა.',
+      requestNew: 'ახალი ბმულის მოთხოვნა',
     },
     footer: {
       disclaimer: 'Citizen Report ხელს უწყობს პრობლემების მოგვარებას — ის არ აჯარიმებს და არ ადანაშაულებს. ყველა საბოლოო გადაწყვეტილებას იღებენ უფლებამოსილი თანამდებობის პირები.',
@@ -346,14 +399,40 @@ interface I18nContextType {
   lang: Language;
   setLang: (lang: Language) => void;
   t: Translations;
+  /** Re-fetch editable content overrides (after an admin edits content). */
+  refreshContent: () => Promise<void>;
 }
 
 const I18nContext = createContext<I18nContextType | null>(null);
 
 const LANG_STORAGE_KEY = 'crp_lang';
 
+type ContentTree = Record<string, unknown>;
+type Overrides = { ka: ContentTree; en: ContentTree };
+
+/**
+ * Recursively overlay editable content (from the admin Content collection) on
+ * top of the static defaults. Only non-empty string overrides win, so a missing
+ * or cleared value falls back to the built-in copy.
+ */
+function deepMerge<T>(base: T, override: unknown): T {
+  if (!override || typeof override !== 'object') return base;
+  const out: Record<string, unknown> = { ...(base as Record<string, unknown>) };
+  for (const [key, value] of Object.entries(override as Record<string, unknown>)) {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      out[key] = deepMerge((out[key] ?? {}) as unknown, value);
+    } else if (typeof value === 'string') {
+      if (value !== '') out[key] = value;
+    } else if (value != null) {
+      out[key] = value;
+    }
+  }
+  return out as T;
+}
+
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Language>('ka');
+  const [overrides, setOverrides] = useState<Overrides | null>(null);
 
   // შენახული ენის აღდგენა გვერდის ჩატვირთვისას.
   // useEffect-ში (და არა useState-ის საწყის მნიშვნელობაში) — hydration mismatch-ის თავიდან ასაცილებლად.
@@ -362,13 +441,34 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     if (saved === 'en' || saved === 'ka') setLangState(saved);
   }, []);
 
+  const refreshContent = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_URL}/content`, { credentials: 'omit' });
+      if (!res.ok) return;
+      const data = (await res.json()) as Overrides;
+      setOverrides(data);
+    } catch {
+      /* fall back to static defaults */
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshContent();
+  }, [refreshContent]);
+
   const setLang = (next: Language) => {
     setLangState(next);
     localStorage.setItem(LANG_STORAGE_KEY, next);
   };
 
+  const t = useMemo<Translations>(() => {
+    const base = translations[lang];
+    const override = overrides?.[lang];
+    return override ? deepMerge(base, override) : base;
+  }, [lang, overrides]);
+
   return (
-    <I18nContext.Provider value={{ lang, setLang, t: translations[lang] }}>
+    <I18nContext.Provider value={{ lang, setLang, t, refreshContent }}>
       {children}
     </I18nContext.Provider>
   );

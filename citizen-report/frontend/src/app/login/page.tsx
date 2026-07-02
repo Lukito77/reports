@@ -61,19 +61,24 @@ function LoginForm() {
       <div className="card">
         <h1 className="mb-1 text-2xl font-bold">{t.login.title}</h1>
         <p className="mb-6 text-sm text-slate-600">{t.login.subtitle}</p>
-        
+
         <form onSubmit={submit} className="space-y-4">
           <div>
             <label className="label" htmlFor="email">{t.login.email}</label>
             <input id="email" type="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           <div>
-            <label className="label" htmlFor="password">{t.login.password}</label>
+            <div className="flex items-center justify-between">
+              <label className="label" htmlFor="password">{t.login.password}</label>
+              <Link href="/forgot-password" className="text-xs text-brand-600 hover:underline">
+                {t.login.forgotLink}
+              </Link>
+            </div>
             <input id="password" type="password" className="input" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
-          
+
           {error && <p className="text-sm text-red-600">{error}</p>}
-          
+
           <button type="submit" className="btn-primary w-full" disabled={busy}>
             {busy ? t.login.signingIn : t.login.submit}
           </button>
