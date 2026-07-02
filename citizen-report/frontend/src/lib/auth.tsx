@@ -6,6 +6,7 @@
  */
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { apiFetch, setAccessToken } from './api';
+import { rememberEmail } from './rememberedEmails';
 import type { User } from './types';
 
 interface AuthContextValue {
@@ -59,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     setAccessToken(res.accessToken);
     setUser(res.user);
+    rememberEmail(email);
   }, []);
 
   const register = useCallback(
@@ -85,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     setAccessToken(res.accessToken);
     setUser(res.user);
+    rememberEmail(email);
   }, []);
 
   const logout = useCallback(async () => {
