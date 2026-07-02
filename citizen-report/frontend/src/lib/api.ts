@@ -3,7 +3,13 @@
  * limit XSS token theft); the refresh token lives in an httpOnly cookie handled
  * by the browser. On a 401, it transparently tries to refresh once and retries.
  */
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+// A stray UTF-8 BOM / zero-width char or whitespace in NEXT_PUBLIC_API_URL
+// silently turns the request into a relative URL and breaks every API call.
+// Extract the URL from the "http(s)://" scheme onward, so any leading garbage
+// (and trailing whitespace, since \s includes the BOM) is dropped.
+export const API_URL =
+  ((process.env.NEXT_PUBLIC_API_URL ?? '').match(/https?:\/\/[^\s]+/)?.[0] ?? '') ||
+  'http://localhost:4000/api';
 
 let accessToken: string | null = null;
 
