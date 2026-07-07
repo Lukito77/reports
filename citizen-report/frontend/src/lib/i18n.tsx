@@ -37,6 +37,29 @@ const translations = {
         { icon: '🎨', label: 'Vandalism' },
         { icon: '♻️', label: 'Illegal dumping' },
       ],
+      faqTitle: 'Frequently asked questions',
+      faq: [
+        {
+          q: 'What is Citizen Report?',
+          a: 'Citizen Report is an online platform for reporting public issues and voicing community concerns to the authorities. Residents can flag problems such as illegal parking, vandalism or littering with photo evidence.',
+        },
+        {
+          q: 'How do I submit a report?',
+          a: 'Click "Report an issue", upload a photo (the location is detected automatically when available), pin the spot on the map, choose a category and describe what you saw. You can also report anonymously.',
+        },
+        {
+          q: 'Can I report car fines, illegal parking or abandoned vehicles?',
+          a: 'Yes. You can report parking violations, abandoned vehicles and other prohibited acts. Authorized officials review every case — the platform never issues automatic fines.',
+        },
+        {
+          q: 'Can I report vandalism or a littered natural area?',
+          a: 'Absolutely. Vandalism, illegal dumping and littered nature are common report categories. Add a photo so officials can assess the situation and act.',
+        },
+        {
+          q: 'Who reviews the reports?',
+          a: 'Only authorized municipal officials (e.g. city hall departments) review submissions and decide on any action. Faces are blurred for privacy and every administrative action is logged.',
+        },
+      ],
     },
     report: {
       title: 'Report an issue',
@@ -235,6 +258,29 @@ const translations = {
         { icon: '🗑️', label: 'უადგილოდ მოთავსებული ნაგავი' },
         { icon: '🎨', label: 'ვანდალიზმი' },
         { icon: '♻️', label: 'უკანონო ნარჩენების გადაყრა' },
+      ],
+      faqTitle: 'ხშირად დასმული კითხვები',
+      faq: [
+        {
+          q: 'რა არის მოქალაქის შეტყობინება?',
+          a: 'მოქალაქის შეტყობინება არის ონლაინ პლატფორმა, სადაც მოქალაქეები აფიქსირებენ ხალხის წუხილს და საქალაქო პრობლემებს — უკანონო პარკირებას, ვანდალიზმს, დანაგვიანებას — ფოტო-მტკიცებულებით.',
+        },
+        {
+          q: 'როგორ გავაკეთო განცხადება (განაცხადის გაკეთება)?',
+          a: 'დააჭირეთ „განაცხადის შეტანას", ატვირთეთ ფოტო (ადგილმდებარეობა ავტომატურად განისაზღვრება), მონიშნეთ ადგილი რუკაზე, აირჩიეთ კატეგორია და აღწერეთ. განაცხადის გაკეთება ანონიმურადაც შესაძლებელია.',
+        },
+        {
+          q: 'შემიძლია მანქანის ჯარიმების ან უკანონო პარკირების შეტყობინება?',
+          a: 'დიახ. შეგიძლიათ შეატყობინოთ მანქანის ჯარიმებზე, უკანონო პარკირებაზე, მიტოვებულ მანქანებსა და სხვა აკრძალულ საქმეზე. განაცხადს განიხილავენ უფლებამოსილი პირები — პლატფორმა ავტომატურ ჯარიმას არ აწესებს.',
+        },
+        {
+          q: 'შემიძლია ვანდალიზმის ან დანაგვიანებული ბუნების შეტყობინება?',
+          a: 'რა თქმა უნდა. ვანდალიზმი, უკანონო ნარჩენების გადაყრა და დანაგვიანებული ბუნება ხშირი კატეგორიებია. დაურთეთ ფოტო, რომ პასუხისმგებელმა პირებმა შეაფასონ და იმოქმედონ.',
+        },
+        {
+          q: 'ვინ განიხილავს განაცხადს — მერია?',
+          a: 'განაცხადს განიხილავენ მხოლოდ უფლებამოსილი პირები (მაგალითად, მერიის სამსახურები) და ისინი იღებენ გადაწყვეტილებას შესაძლო ჯარიმებზე. სახეები იბურება კონფიდენციალურობისთვის.',
+        },
       ],
     },
     report: {

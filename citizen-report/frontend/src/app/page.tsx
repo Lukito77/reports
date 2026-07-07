@@ -71,6 +71,38 @@ export default function HomePage() {
           <li>{t.home.trust4}</li>
         </ul>
       </section>
+
+      {/* FAQ — keyword-rich content + FAQ rich results */}
+      <section>
+        <h2 className="mb-6 text-center text-2xl font-bold">{t.home.faqTitle}</h2>
+        <div className="mx-auto max-w-3xl space-y-3">
+          {t.home.faq.map((item) => (
+            <details key={item.q} className="card">
+              <summary className="cursor-pointer list-none font-semibold text-slate-800">
+                {item.q}
+              </summary>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">{item.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      {/* FAQPage structured data (mirrors the visible Q&A above) */}
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: t.home.faq.map((item) => ({
+              '@type': 'Question',
+              name: item.q,
+              acceptedAnswer: { '@type': 'Answer', text: item.a },
+            })),
+          }),
+        }}
+      />
     </div>
   );
 }
