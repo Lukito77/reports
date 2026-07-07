@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import './globals.css';
 import 'leaflet/dist/leaflet.css';
 import { AuthProvider } from '@/lib/auth';
@@ -137,6 +138,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="application/ld+json"
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        {/* Web Insights analytics */}
+        <Script
+          src="https://webinsights.vercel.app/js/script.js"
+          data-site-id="rxqdGqdXAQ8W"
+          strategy="afterInteractive"
         />
         <SettingsProvider>
           <I18nProvider>
