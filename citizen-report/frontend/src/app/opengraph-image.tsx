@@ -32,7 +32,7 @@ export default function OpengraphImage() {
           authorized officials.
         </div>
         <div style={{ display: 'flex', marginTop: 40, fontSize: 26, opacity: 0.8 }}>
-          citizen-report-frontend.vercel.app
+          reportebi.vercel.app
         </div>
       </div>
     ),

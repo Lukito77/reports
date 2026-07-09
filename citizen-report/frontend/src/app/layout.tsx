@@ -7,7 +7,7 @@ import { I18nProvider } from '@/lib/i18n';
 import { SettingsProvider } from '@/lib/settings';
 import { SiteFrame } from '@/components/SiteFrame';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://citizen-report-frontend.vercel.app';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://reportebi.vercel.app';
 
 // Bilingual (Georgian-first) description + keyword set for search engines.
 const DESCRIPTION_KA =
