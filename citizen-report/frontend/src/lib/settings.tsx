@@ -25,7 +25,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     fontSizeBase: 16,
     radius: 12,
   },
-  branding: { siteName: 'Citizen Report', logoEmoji: '🏛️', tagline: '' },
+  branding: { siteName: 'Reports', logoEmoji: '🏛️', tagline: '' },
   layout: {
     containerWidth: 'normal',
     showFooter: true,

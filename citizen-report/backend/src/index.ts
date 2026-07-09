@@ -11,7 +11,7 @@ async function start() {
   const { app } = createApp();
 
   const server = app.listen(env.PORT, () => {
-    logger.info(`Citizen Report API listening on :${env.PORT} (${env.NODE_ENV})`);
+    logger.info(`Reports API listening on :${env.PORT} (${env.NODE_ENV})`);
     logger.info(`API docs at http://localhost:${env.PORT}/api/docs`);
   });
 

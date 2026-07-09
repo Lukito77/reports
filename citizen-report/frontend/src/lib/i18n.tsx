@@ -40,8 +40,8 @@ const translations = {
       faqTitle: 'Frequently asked questions',
       faq: [
         {
-          q: 'What is Citizen Report?',
-          a: 'Citizen Report is an online platform for reporting public issues and voicing community concerns to the authorities. Residents can flag problems such as illegal parking, vandalism or littering with photo evidence.',
+          q: 'What is Reports?',
+          a: 'Reports is an online platform for reporting public issues and voicing community concerns to the authorities. Residents can flag problems such as illegal parking, vandalism or littering with photo evidence.',
         },
         {
           q: 'How do I submit a report?',
@@ -151,7 +151,7 @@ const translations = {
       requestNew: 'Request a new link',
     },
     footer: {
-      disclaimer: 'Citizen Report helps find solutions — it does not fine or assign blame. All enforcement decisions are made by authorized officials.',
+      disclaimer: 'Reports helps find solutions — it does not fine or assign blame. All enforcement decisions are made by authorized officials.',
     },
     status: {
       SUBMITTED: 'Submitted',
@@ -373,7 +373,7 @@ const translations = {
       requestNew: 'ახალი ბმულის მოთხოვნა',
     },
     footer: {
-      disclaimer: 'Citizen Report ხელს უწყობს პრობლემების მოგვარებას — ის არ აჯარიმებს და არ ადანაშაულებს. ყველა საბოლოო გადაწყვეტილებას იღებენ უფლებამოსილი თანამდებობის პირები.',
+      disclaimer: 'Reports ხელს უწყობს პრობლემების მოგვარებას — ის არ აჯარიმებს და არ ადანაშაულებს. ყველა საბოლოო გადაწყვეტილებას იღებენ უფლებამოსილი თანამდებობის პირები.',
     },
     status: {
       SUBMITTED: 'გაგზავნილი',

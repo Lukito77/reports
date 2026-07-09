@@ -10,7 +10,7 @@ async function start() {
     // სწორად ვიღებთ app-ს ობიექტიდან, რომელსაც createApp() აბრუნებს
     const { app } = (0, app_1.createApp)();
     const server = app.listen(env_1.env.PORT, () => {
-        logger_1.logger.info(`Citizen Report API listening on :${env_1.env.PORT} (${env_1.env.NODE_ENV})`);
+        logger_1.logger.info(`Reports API listening on :${env_1.env.PORT} (${env_1.env.NODE_ENV})`);
         logger_1.logger.info(`API docs at http://localhost:${env_1.env.PORT}/api/docs`);
     });
     // Graceful shutdown.

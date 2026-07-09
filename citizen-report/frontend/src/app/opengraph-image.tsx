@@ -3,7 +3,7 @@ import { ImageResponse } from 'next/og';
 // Social share card (Facebook/LinkedIn/Twitter) generated at build time.
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
-export const alt = 'Citizen Report — report public issues with photo evidence';
+export const alt = 'Reports — report public issues with photo evidence';
 
 export default function OpengraphImage() {
   return new ImageResponse(
@@ -22,7 +22,7 @@ export default function OpengraphImage() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', fontSize: 40, opacity: 0.9 }}>
-          📍 Citizen Report
+          📍 Reports
         </div>
         <div style={{ display: 'flex', marginTop: 28, fontSize: 76, fontWeight: 700, lineHeight: 1.1 }}>
           Report public issues in your city

@@ -5,7 +5,7 @@
 export const openapiSpec = {
   openapi: '3.0.3',
   info: {
-    title: 'Citizen Report API',
+    title: 'Reports API',
     version: '1.0.0',
     description:
       'Evidence collection & case management for potential public infractions. ' +

@@ -8,7 +8,7 @@ exports.openapiSpec = void 0;
 exports.openapiSpec = {
     openapi: '3.0.3',
     info: {
-        title: 'Citizen Report API',
+        title: 'Reports API',
         version: '1.0.0',
         description: 'Evidence collection & case management for potential public infractions. ' +
             'The API never issues fines or determines guilt — only authorized staff review reports.',

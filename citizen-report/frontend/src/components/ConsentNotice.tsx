@@ -9,14 +9,14 @@ interface Props {
 
 export const CONSENT_TEXT =
   'I confirm that the evidence I am submitting is genuine and obtained lawfully. ' +
-  'I consent to Citizen Report processing this report — including photos, optional video, ' +
+  'I consent to Reports processing this report — including photos, optional video, ' +
   'location data, and any metadata — for review by authorized officials. I understand that ' +
   'this platform does not issue fines or determine guilt, that faces may be blurred to protect ' +
   'privacy, and that I may request export or deletion of my personal data at any time.';
 
 export const CONSENT_TEXT_KA =
   'ვადასტურებ, რომ ჩემ მიერ წარდგენილი მტკიცებულება ნამდვილია და მოპოვებულია კანონიერად. ' +
-  'თანახმა ვარ, რომ Citizen Report-მა დაამუშაოს ეს განაცხადი — ფოტოების, სურვილისამებრ ატვირთული ვიდეოს, ' +
+  'თანახმა ვარ, რომ Reports-მა დაამუშაოს ეს განაცხადი — ფოტოების, სურვილისამებრ ატვირთული ვიდეოს, ' +
   'მდებარეობისა და ნებისმიერი მეტამონაცემების ჩათვლით — უფლებამოსილი პირებისთვის განსახილველად ' +
   'გადაგზავნის მიზნით. მესმის, რომ ეს პლატფორმა არ აკისრებს ჯარიმებს და არ ადგენს დანაშაულს, ' +
   'რომ სახეები შეიძლება დაიბუროს კონფიდენციალურობის დასაცავად და რომ ნებისმიერ დროს შემიძლია ' +

@@ -28,8 +28,8 @@ export async function sendVerificationEmail(to: string, token: string): Promise<
   const url = `${env.APP_BASE_URL}/verify-email?token=${encodeURIComponent(token)}`;
   await send(
     to,
-    'Verify your Citizen Report email',
-    `<p>Welcome to Citizen Report.</p><p>Please verify your email by clicking the link below:</p>
+    'Verify your Reports email',
+    `<p>Welcome to Reports.</p><p>Please verify your email by clicking the link below:</p>
      <p><a href="${url}">Verify my email</a></p>
      <p>This link expires in 24 hours. If you did not create an account, ignore this email.</p>`,
     `Verify your email: ${url}`,
@@ -39,11 +39,11 @@ export async function sendVerificationEmail(to: string, token: string): Promise<
 export async function sendOtpEmail(to: string, code: string): Promise<void> {
   await send(
     to,
-    'Your Citizen Report sign-in code',
+    'Your Reports sign-in code',
     `<p>Your one-time sign-in code is:</p>
      <p style="font-size:28px;font-weight:bold;letter-spacing:6px;margin:12px 0">${code}</p>
      <p>This code expires in 10 minutes. If you did not request it, you can safely ignore this email.</p>`,
-    `Your Citizen Report sign-in code is ${code}. It expires in 10 minutes.`,
+    `Your Reports sign-in code is ${code}. It expires in 10 minutes.`,
   );
 }
 
@@ -51,7 +51,7 @@ export async function sendPasswordResetEmail(to: string, token: string): Promise
   const url = `${env.APP_BASE_URL}/reset-password?token=${encodeURIComponent(token)}`;
   await send(
     to,
-    'Reset your Citizen Report password',
+    'Reset your Reports password',
     `<p>We received a request to reset your password.</p>
      <p><a href="${url}">Reset password</a></p>
      <p>This link expires in 1 hour. If you did not request this, ignore this email.</p>`,

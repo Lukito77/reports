@@ -41,7 +41,7 @@ const schema = zod_1.z.object({
     SMTP_PORT: zod_1.z.coerce.number().default(587),
     SMTP_USER: zod_1.z.string().optional().default(''),
     SMTP_PASS: zod_1.z.string().optional().default(''),
-    SMTP_FROM: zod_1.z.string().default('Citizen Report <no-reply@citizen-report.example>'),
+    SMTP_FROM: zod_1.z.string().default('Reports <no-reply@citizen-report.example>'),
     // trim — env მნიშვნელობაში გაპარულმა \r/\n-მა redirect ჰედერი არ გატეხოს
     APP_BASE_URL: zod_1.z.string().trim().default('http://localhost:3000'),
     CAPTCHA_PROVIDER: zod_1.z.enum(['hcaptcha', 'recaptcha', 'none']).default('none'),

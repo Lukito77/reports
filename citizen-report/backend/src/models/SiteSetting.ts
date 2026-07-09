@@ -67,7 +67,7 @@ export const DEFAULT_THEME: ITheme = {
 };
 
 export const DEFAULT_BRANDING: IBranding = {
-  siteName: 'Citizen Report',
+  siteName: 'Reports',
   logoEmoji: '🏛️',
   tagline: '',
 };

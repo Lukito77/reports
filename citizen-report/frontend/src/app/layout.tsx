@@ -13,7 +13,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://citizen-report-fro
 const DESCRIPTION_KA =
   'მოქალაქის შეტყობინების ონლაინ პლატფორმა — გააკეთეთ განცხადება საქალაქო პრობლემებზე: მანქანის ჯარიმები, უკანონო პარკირება, ვანდალიზმი, დანაგვიანებული ბუნება და სხვა აკრძალული ქმედებები. ფოტო-მტკიცებულებას განიხილავენ უფლებამოსილი პირები — ავტომატური ჯარიმების გარეშე.';
 const DESCRIPTION_EN =
-  'Citizen reporting platform for public infractions — illegal parking, car fines, vandalism, littering and other prohibited acts. Submit photo evidence reviewed by authorized officials.';
+  'Reports — a civic platform for reporting public infractions: illegal parking, car fines, vandalism, littering and other prohibited acts. Submit photo evidence reviewed by authorized officials.';
 
 const KEYWORDS = [
   // Georgian — primary keywords
@@ -65,12 +65,12 @@ const KEYWORDS = [
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'მოქალაქის შეტყობინება — საქალაქო პრობლემების ონლაინ განაცხადი | Citizen Report',
+    default: 'მოქალაქის შეტყობინება — საქალაქო პრობლემების ონლაინ განაცხადი | Reports',
     template: '%s | მოქალაქის შეტყობინება',
   },
   description: `${DESCRIPTION_KA} ${DESCRIPTION_EN}`,
   keywords: KEYWORDS,
-  applicationName: 'მოქალაქის შეტყობინება · Citizen Report',
+  applicationName: 'მოქალაქის შეტყობინება · Reports',
   alternates: {
     canonical: '/',
     languages: { ka: '/', en: '/', 'x-default': '/' },
@@ -86,7 +86,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     url: SITE_URL,
-    siteName: 'მოქალაქის შეტყობინება · Citizen Report',
+    siteName: 'მოქალაქის შეტყობინება · Reports',
     title: 'მოქალაქის შეტყობინება — საქალაქო პრობლემების ონლაინ განაცხადი',
     description: DESCRIPTION_KA,
     locale: 'ka_GE',
@@ -94,7 +94,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'მოქალაქის შეტყობინება · Citizen Report',
+    title: 'მოქალაქის შეტყობინება · Reports',
     description: DESCRIPTION_KA,
   },
 };
@@ -107,14 +107,14 @@ const jsonLd = {
       '@type': 'WebSite',
       '@id': `${SITE_URL}/#website`,
       url: SITE_URL,
-      name: 'მოქალაქის შეტყობინება · Citizen Report',
+      name: 'მოქალაქის შეტყობინება · Reports',
       description: DESCRIPTION_KA,
       inLanguage: ['ka', 'en'],
     },
     {
       '@type': 'Organization',
       '@id': `${SITE_URL}/#organization`,
-      name: 'მოქალაქის შეტყობინება · Citizen Report',
+      name: 'მოქალაქის შეტყობინება · Reports',
       url: SITE_URL,
       description: DESCRIPTION_EN,
       areaServed: 'GE',
