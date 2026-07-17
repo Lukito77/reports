@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth';
 import { useI18n } from '@/lib/i18n';
 import { PhotoUpload } from '@/components/PhotoUpload';
 import { ConsentNotice, CONSENT_TEXT } from '@/components/ConsentNotice';
+import { Confetti } from '@/components/Confetti';
 import type { Category } from '@/lib/types';
 import type { LatLng } from '@/components/MapPicker';
 
@@ -93,6 +94,7 @@ export default function ReportPage() {
   if (done) {
     return (
       <div className="mx-auto max-w-lg">
+        <Confetti />
         <div className="card text-center">
           <div className="mb-3 text-5xl">✅</div>
           <h1 className="mb-2 text-xl font-bold">{t.report.successTitle}</h1>
