@@ -4,6 +4,7 @@ import { ReactNode } from 'react';
 import { useSettings } from '@/lib/settings';
 import { Navbar } from './Navbar';
 import { Footer } from './Footer';
+import { InstallPrompt } from './InstallPrompt';
 
 const CONTAINER_WIDTH: Record<string, string> = {
   narrow: 'max-w-3xl',
@@ -25,6 +26,7 @@ export function SiteFrame({ children }: { children: ReactNode }) {
       <Navbar />
       <main className={`mx-auto w-full px-4 py-8 ${widthClass}`}>{children}</main>
       {settings.layout.showFooter && <Footer />}
+      <InstallPrompt />
     </>
   );
 }
