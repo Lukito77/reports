@@ -302,8 +302,17 @@ body {
   gap: 12px;
 }
 .home-deck .ledger-item .icon {
-  font-size: 26px;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--ink-surface-strong);
+  font-size: 20px;
   line-height: 1;
+  overflow: hidden;
 }
 .home-deck .ledger-item .label {
   font-size: 14.5px;
