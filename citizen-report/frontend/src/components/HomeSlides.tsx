@@ -148,13 +148,10 @@ export function HomeSlides() {
               {t.home.whatYouCanReport}
             </h2>
             <div className="ledger-grid reveal" style={{ transitionDelay: '220ms' }}>
-              {t.home.categories.map((c, i) => (
+              {t.home.categories.map((c) => (
                 <div key={c.label} className="ledger-item">
                   <span className="icon">{c.icon}</span>
-                  <div>
-                    <div className="label">{c.label}</div>
-                    <div className="num">№ {String(i + 1).padStart(3, '0')}</div>
-                  </div>
+                  <div className="label">{c.label}</div>
                 </div>
               ))}
             </div>
