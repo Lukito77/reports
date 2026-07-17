@@ -110,7 +110,9 @@ async function ingestFile(file: UploadedFile): Promise<IngestedMedia> {
     media.ai.tamper = await ai.detectTampering(file.buffer);
 
     // Privacy: produce a face-blurred, metadata-stripped derivative for reviewers.
-    const blurred = await ai.blurFaces(file.buffer);
+    const blurred = await ai.blurFaces(file.buffer).catch(() => {
+      throw ApiError.badRequest('This photo could not be processed. Please try a different file.');
+    });
     media.ai.facesBlurred = blurred.facesBlurred;
     media.processedKey = newStorageKey('processed', 'jpg');
     await putObject(media.processedKey, blurred.buffer, 'image/jpeg');

@@ -1,3 +1,8 @@
+// Must be the first import: patches Express's router so a rejected promise
+// from an async route handler reaches errorHandler via next(err) instead of
+// hanging the request forever with no response (Express 4 does not await
+// async handlers itself).
+import 'express-async-errors';
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -55,7 +60,7 @@ export function createApp() {
       origin: true,
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Client'],
     }),
   );
 
