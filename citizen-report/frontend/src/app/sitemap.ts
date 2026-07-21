@@ -13,6 +13,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/jarimebi', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/ukanono-parkingi', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/vandalizmi', priority: 0.8, changeFrequency: 'monthly' },
+    { path: '/garemos-dabinzureba', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/register', priority: 0.6, changeFrequency: 'monthly' },
     { path: '/login', priority: 0.5, changeFrequency: 'monthly' },
     { path: '/forgot-password', priority: 0.3, changeFrequency: 'yearly' },
