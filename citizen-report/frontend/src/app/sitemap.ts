@@ -8,6 +8,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const routes: { path: string; priority: number; changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'] }[] = [
     { path: '', priority: 1.0, changeFrequency: 'daily' },
     { path: '/report', priority: 0.9, changeFrequency: 'weekly' },
+    // Georgian topic/landing pages — public and indexable, so they belong in the sitemap.
+    { path: '/mokalakis-shetkobineba', priority: 0.8, changeFrequency: 'monthly' },
+    { path: '/jarimebi', priority: 0.8, changeFrequency: 'monthly' },
+    { path: '/ukanono-parkingi', priority: 0.8, changeFrequency: 'monthly' },
+    { path: '/vandalizmi', priority: 0.8, changeFrequency: 'monthly' },
     { path: '/register', priority: 0.6, changeFrequency: 'monthly' },
     { path: '/login', priority: 0.5, changeFrequency: 'monthly' },
     { path: '/forgot-password', priority: 0.3, changeFrequency: 'yearly' },
