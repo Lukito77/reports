@@ -11,7 +11,7 @@ function setRefreshCookie(res: Response, token: string, expiresAt: Date) {
   res.cookie(REFRESH_COOKIE, token, {
     httpOnly: true,
     secure: isProd, // პროდაქშენზე (Vercel) იქნება true
-    // ფრონტი და ბექი სხვადასხვა დომენზეა (citizen-report-frontend... / reports-cyan...),
+    // ფრონტი და ბექი სხვადასხვა დომენზეა (reportebi... / reports-cyan...),
     // ამიტომ პროდზე ქუქი მხოლოდ SameSite=None-ით გაიგზავნება cross-site fetch-ზე.
     sameSite: isProd ? 'none' : 'lax',
     domain: env.COOKIE_DOMAIN,
@@ -34,6 +34,18 @@ function clearRefreshCookie(res: Response) {
 
 function reqMeta(req: Request) {
   return { ip: req.ip, userAgent: req.headers['user-agent']?.toString() };
+}
+
+// React Native can't rely on the httpOnly refresh cookie the way a browser
+// does, so the mobile app sends `X-Client: mobile` and we hand it the raw
+// refresh token in the JSON body instead (in addition to still setting the
+// cookie, which mobile simply ignores). Web behavior is unchanged.
+function isMobileClient(req: Request) {
+  return req.headers['x-client'] === 'mobile';
+}
+
+function refreshTokenFromRequest(req: Request): string | undefined {
+  return (req.cookies?.crp_refresh as string | undefined) ?? (req.body?.refreshToken as string | undefined);
 }
 
 // ⚡ სრულად გამართული და ინტეგრირებული Google Auth ჰენდლერი
@@ -121,19 +133,27 @@ export async function login(req: Request, res: Response) {
   const { email, password } = req.body;
   const { user, tokens } = await authService.login(email, password, reqMeta(req));
   setRefreshCookie(res, tokens.refreshToken, tokens.refreshExpiresAt);
-  res.json({ user, accessToken: tokens.accessToken });
+  res.json({
+    user,
+    accessToken: tokens.accessToken,
+    ...(isMobileClient(req) ? { refreshToken: tokens.refreshToken } : {}),
+  });
 }
 
 export async function refresh(req: Request, res: Response) {
-  const raw = req.cookies?.crp_refresh as string | undefined;
+  const raw = refreshTokenFromRequest(req);
   if (!raw) return res.status(401).json({ error: { code: 'UNAUTHORIZED', message: 'No refresh token' } });
   const { user, tokens } = await authService.refresh(raw, reqMeta(req));
   setRefreshCookie(res, tokens.refreshToken, tokens.refreshExpiresAt);
-  return res.json({ user, accessToken: tokens.accessToken });
+  return res.json({
+    user,
+    accessToken: tokens.accessToken,
+    ...(isMobileClient(req) ? { refreshToken: tokens.refreshToken } : {}),
+  });
 }
 
 export async function logout(req: Request, res: Response) {
-  await authService.logout(req.cookies?.crp_refresh);
+  await authService.logout(refreshTokenFromRequest(req));
   clearRefreshCookie(res);
   res.json({ message: 'Logged out' });
 }
@@ -162,5 +182,9 @@ export async function verifyOtp(req: Request, res: Response) {
   const { email, code } = req.body;
   const { user, tokens } = await authService.verifyOtp(email, code, reqMeta(req));
   setRefreshCookie(res, tokens.refreshToken, tokens.refreshExpiresAt);
-  res.json({ user, accessToken: tokens.accessToken });
+  res.json({
+    user,
+    accessToken: tokens.accessToken,
+    ...(isMobileClient(req) ? { refreshToken: tokens.refreshToken } : {}),
+  });
 }
