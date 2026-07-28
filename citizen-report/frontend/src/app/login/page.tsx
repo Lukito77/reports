@@ -139,16 +139,14 @@ function LoginForm() {
             </button>
 
             {/* Google-ით შესვლის სექცია და ღილაკი */}
-            <div className="relative flex py-2 items-center">
-              <div className="flex-grow border-t border-slate-200"></div>
-              <span className="flex-shrink mx-4 text-xs text-slate-400 uppercase">{t.login.or}</span>
-              <div className="flex-grow border-t border-slate-200"></div>
+            <div className="flex py-2 items-center justify-center">
+              <span className="text-xs text-slate-400 uppercase">{t.login.or}</span>
             </div>
 
             <button
               type="button"
               onClick={handleGoogleLogin}
-              className="w-full flex items-center justify-center gap-2 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-medium py-2 px-4 rounded-md shadow-sm transition-colors text-sm"
+              className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 px-4 rounded-md transition-colors text-sm"
             >
               {/* Google-ის ლოგო SVG */}
               <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -186,7 +184,7 @@ function LoginForm() {
 
         {mode === 'otp' && otpSent && (
           <form onSubmit={verifyCode} className="space-y-4">
-            <div className="rounded-md bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-800">
+            <div className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-800">
               {t.login.otpSent}
             </div>
             <div>

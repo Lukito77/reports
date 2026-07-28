@@ -76,7 +76,7 @@ export function PhotoUpload({ files, onChange, onGps }: Props) {
 
   return (
     <div>
-      <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-8 text-center hover:border-brand-500">
+      <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg bg-slate-100 px-6 py-8 text-center transition-colors hover:bg-brand-50">
         <span className="text-3xl">📷</span>
         <span className="mt-2 text-sm font-medium text-slate-700">
           {lang === 'ka' ? 'დააჭირეთ ფოტოს ან ვიდეოს დასამატებლად' : 'Tap to add photos (or a video)'}
@@ -101,7 +101,7 @@ export function PhotoUpload({ files, onChange, onGps }: Props) {
       {previews.length > 0 && (
         <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
           {previews.map((p, i) => (
-            <div key={i} className="group relative overflow-hidden rounded-lg border border-slate-200">
+            <div key={i} className="group relative overflow-hidden rounded-lg bg-slate-100">
               {p.isVideo ? (
                 <video src={p.url} className="h-24 w-full object-cover" />
               ) : (

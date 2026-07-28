@@ -196,7 +196,7 @@ export default function ContentPage() {
             const dirty = isDirty(row);
             const multiline = row.type !== 'text';
             return (
-              <div key={row.id} className="space-y-2 border-t border-slate-100 pt-4 first:border-t-0 first:pt-0">
+              <div key={row.id} className="space-y-2 pt-4 first:pt-0">
                 <div className="flex items-center justify-between gap-2">
                   <div>
                     <span className="text-sm font-medium">{row.label || row.key}</span>

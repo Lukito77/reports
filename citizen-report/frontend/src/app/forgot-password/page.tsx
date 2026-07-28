@@ -40,7 +40,7 @@ export default function ForgotPasswordPage() {
 
         {sent ? (
           <div className="space-y-4">
-            <div className="rounded-md bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-800">
+            <div className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-800">
               {t.forgotPassword.sent}
             </div>
             <Link href="/login" className="btn-primary w-full inline-block text-center">

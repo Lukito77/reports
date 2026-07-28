@@ -6,7 +6,6 @@ import {
   AreaChart,
   Bar,
   BarChart,
-  CartesianGrid,
   Cell,
   Line,
   LineChart,
@@ -137,7 +136,6 @@ export default function AdminDashboardPage() {
                   <stop offset="95%" stopColor="var(--color-count)" stopOpacity={0.03} />
                 </linearGradient>
               </defs>
-              <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="date"
                 tickLine={false}
@@ -199,7 +197,6 @@ export default function AdminDashboardPage() {
                 layout="vertical"
                 margin={{ left: 8, right: 12 }}
               >
-                <CartesianGrid horizontal={false} />
                 <XAxis type="number" hide allowDecimals={false} />
                 <YAxis
                   type="category"
@@ -226,7 +223,6 @@ export default function AdminDashboardPage() {
         <CardContent>
           <ChartContainer config={usersConfig} className="aspect-[3/1] w-full">
             <LineChart data={data.usersOverTime} margin={{ left: 0, right: 12, top: 8 }}>
-              <CartesianGrid vertical={false} />
               <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
               <YAxis tickLine={false} axisLine={false} width={28} allowDecimals={false} />
               <ChartTooltip content={<ChartTooltipContent />} />

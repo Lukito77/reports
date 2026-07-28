@@ -27,7 +27,7 @@ export function ConsentNotice({ checked, onChange }: Props) {
   const isKa = lang === 'ka';
 
   return (
-    <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+    <div className="rounded-lg bg-amber-50 p-4">
       <h3 className="mb-2 text-sm font-semibold text-amber-800">
         {isKa ? 'თანხმობა და კონფიდენციალურობის პირობები' : 'Consent and Privacy Terms'}
       </h3>

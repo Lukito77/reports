@@ -48,7 +48,7 @@ const ChartContainer = React.forwardRef<
         data-chart={chartId}
         ref={ref}
         className={cn(
-          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-slate-500 [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-slate-200/60 [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none",
+          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-slate-500 [&_.recharts-cartesian-grid_line]:stroke-transparent [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none",
           className,
         )}
         {...props}
@@ -147,7 +147,7 @@ const ChartTooltipContent = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          'grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs shadow-xl',
+          'grid min-w-[8rem] items-start gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs shadow-xl',
           className,
         )}
       >
@@ -179,15 +179,10 @@ const ChartTooltipContent = React.forwardRef<
                           className={cn('shrink-0 rounded-[2px]', {
                             'h-2.5 w-2.5': indicator === 'dot',
                             'w-1': indicator === 'line',
-                            'w-0 border-[1.5px] border-dashed bg-transparent': indicator === 'dashed',
+                            'w-1 opacity-50': indicator === 'dashed',
                             'my-0.5': nestLabel && indicator === 'dashed',
                           })}
-                          style={
-                            {
-                              backgroundColor: indicator === 'dashed' ? 'transparent' : indicatorColor,
-                              borderColor: indicatorColor,
-                            } as React.CSSProperties
-                          }
+                          style={{ backgroundColor: indicatorColor } as React.CSSProperties}
                         />
                       )
                     )}

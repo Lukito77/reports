@@ -185,7 +185,7 @@ export default function PermissionsPage() {
                         checked={checked}
                         disabled={fromRole}
                         onChange={() => togglePerm(u.id, p.value)}
-                        className="h-4 w-4 rounded border-slate-300"
+                        className="h-4 w-4 rounded"
                       />
                       {lang === 'ka' ? p.ka : p.en}
                     </label>

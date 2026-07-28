@@ -145,7 +145,7 @@ export function LandingPage({
       </section>
 
       {/* English summary for English-language search terms */}
-      <section className="border-t border-slate-200 pt-6">
+      <section className="pt-6">
         <p className="max-w-3xl text-sm leading-relaxed text-slate-500">{englishSummary}</p>
       </section>
 

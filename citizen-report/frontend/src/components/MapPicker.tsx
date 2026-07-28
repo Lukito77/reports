@@ -52,7 +52,7 @@ export default function MapPicker({ value, onChange }: Props) {
   const center: [number, number] = value ? [value.lat, value.lng] : [41.7151, 44.8271];
 
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-300">
+    <div className="overflow-hidden rounded-lg">
       <MapContainer center={center} zoom={value ? 15 : 12} style={{ height: 320, width: '100%' }}>
         <TileLayer
           attribution='&copy; OpenStreetMap contributors'

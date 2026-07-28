@@ -39,16 +39,16 @@ body {
     @apply btn bg-brand-600 text-white hover:bg-brand-700;
   }
   .btn-secondary {
-    @apply btn border border-slate-300 bg-white text-slate-700 hover:bg-slate-100;
+    @apply btn bg-slate-100 text-slate-700 hover:bg-slate-200;
   }
   .input {
-    @apply w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500;
+    @apply w-full rounded-md bg-slate-100 px-3 py-2 text-sm outline-none focus:bg-brand-50;
   }
   .label {
     @apply mb-1 block text-sm font-medium text-slate-700;
   }
   .card {
-    @apply rounded-xl border border-slate-200 bg-white p-6 shadow-sm;
+    @apply rounded-xl bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_10px_28px_-18px_rgba(15,23,42,0.18)];
   }
   .badge {
     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
@@ -120,26 +120,24 @@ body {
 .home-deck {
   --ink-bg-0: #ffffff;
   --ink-bg-1: #f8f6f1;
-  --ink-line: rgba(20, 20, 24, 0.06);
   --ink-fg: #1b1f27;
   --ink-fg-dim: #4b4f5a;
   --ink-fg-mute: #7a7f8c;
   --ink-gold: #8a5e17;
   --ink-crimson: #b3312c;
   --ink-crimson-2: #a83a30;
-  --ink-hairline: rgba(20, 20, 24, 0.12);
-  --ink-hairline-soft: rgba(20, 20, 24, 0.09);
-  --ink-surface: rgba(20, 20, 24, 0.025);
   --ink-surface-strong: rgba(20, 20, 24, 0.035);
-  --ink-border: rgba(20, 20, 24, 0.22);
-  --ink-border-strong: rgba(20, 20, 24, 0.45);
+  --ink-panel: rgba(20, 20, 24, 0.04);
+  --ink-panel-shadow: 0 1px 2px rgba(20, 20, 24, 0.05), 0 12px 28px -20px rgba(20, 20, 24, 0.22);
   --ink-seal-outer: rgba(140, 100, 20, 0.28);
   --ink-seal-inner: rgba(140, 100, 20, 0.18);
-  --ink-certificate-border: rgba(138, 94, 23, 0.4);
   --ink-dot: rgba(20, 20, 24, 0.18);
   --ink-counter: rgba(20, 20, 24, 0.5);
   --ink-toggle-bg: rgba(20, 20, 24, 0.05);
   --ink-toggle-bg-hover: rgba(20, 20, 24, 0.09);
+  --ink-glow-top: rgba(20, 20, 24, 0.035);
+  --ink-glow-bottom: rgba(138, 94, 23, 0.045);
+  --ink-vignette: rgba(20, 20, 24, 0.05);
   position: relative;
   left: 50%;
   right: 50%;
@@ -154,26 +152,24 @@ body {
 .home-deck[data-theme='dark'] {
   --ink-bg-0: #0a0f1c;
   --ink-bg-1: #0d1526;
-  --ink-line: rgba(238, 240, 232, 0.05);
   --ink-fg: #eef0e8;
   --ink-fg-dim: #b7bcc9;
   --ink-fg-mute: #7c8496;
   --ink-gold: #c99a3f;
   --ink-crimson: #b3312c;
   --ink-crimson-2: #c9463f;
-  --ink-hairline: rgba(238, 240, 232, 0.14);
-  --ink-hairline-soft: rgba(238, 240, 232, 0.1);
-  --ink-surface: rgba(238, 240, 232, 0.03);
   --ink-surface-strong: rgba(238, 240, 232, 0.04);
-  --ink-border: rgba(238, 240, 232, 0.28);
-  --ink-border-strong: rgba(238, 240, 232, 0.55);
+  --ink-panel: rgba(238, 240, 232, 0.055);
+  --ink-panel-shadow: 0 1px 2px rgba(0, 0, 0, 0.28), 0 14px 32px -22px rgba(0, 0, 0, 0.6);
   --ink-seal-outer: rgba(230, 180, 60, 0.16);
   --ink-seal-inner: rgba(230, 180, 60, 0.12);
-  --ink-certificate-border: rgba(201, 154, 63, 0.35);
   --ink-dot: rgba(255, 255, 255, 0.22);
   --ink-counter: rgba(255, 255, 255, 0.55);
   --ink-toggle-bg: rgba(255, 255, 255, 0.06);
   --ink-toggle-bg-hover: rgba(255, 255, 255, 0.12);
+  --ink-glow-top: rgba(120, 150, 220, 0.07);
+  --ink-glow-bottom: rgba(201, 154, 63, 0.05);
+  --ink-vignette: rgba(4, 7, 14, 0.55);
 }
 
 .home-deck .deck-scroll {
@@ -216,31 +212,40 @@ body {
   gap: clamp(20px, 3vw, 34px);
 }
 
+/* ambient backdrop — no ruled lines, just soft depth so cards stay the focus */
 .home-deck .bulletin-grid {
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(var(--ink-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--ink-line) 1px, transparent 1px);
-  background-size: 64px 64px;
-  mask-image: linear-gradient(180deg, black, black 70%, transparent 100%);
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(ellipse 70% 50% at 50% 0%, var(--ink-glow-top), transparent 70%),
+    radial-gradient(ellipse 60% 45% at 12% 100%, var(--ink-glow-bottom), transparent 72%);
+}
+/* corner vignette pushes the eye back to the middle */
+.home-deck .bulletin-grid::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 90% 78% at 50% 50%, transparent 55%, var(--ink-vignette) 100%);
 }
 
+/* seal is now a soft halo instead of two ruled rings */
 .home-deck .bulletin-seal {
   position: absolute;
   right: -140px;
   top: -140px;
   width: 560px;
   height: 560px;
-  border: 1.5px solid var(--ink-seal-outer);
   border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, var(--ink-seal-outer) 0%, transparent 62%);
   animation: home-spin 90s linear infinite;
 }
 .home-deck .bulletin-seal::before {
   content: '';
   position: absolute;
   inset: 24px;
-  border: 1px dashed var(--ink-seal-inner);
   border-radius: 50%;
+  background: radial-gradient(circle at 38% 34%, var(--ink-seal-inner) 0%, transparent 58%);
 }
 @keyframes home-spin {
   to {
@@ -300,11 +305,11 @@ body {
 }
 .home-deck .btn-ink-secondary {
   color: var(--ink-fg);
-  border: 1px solid var(--ink-border);
+  background: var(--ink-toggle-bg);
   padding: 15px 24px;
 }
 .home-deck .btn-ink-secondary:hover {
-  border-color: var(--ink-border-strong);
+  background: var(--ink-toggle-bg-hover);
 }
 
 .home-deck .slide-note {
@@ -317,16 +322,21 @@ body {
 .home-deck .ledger-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  align-items: stretch;
   gap: 14px;
 }
 .home-deck .ledger-item {
-  border: 1px solid var(--ink-hairline);
-  background: var(--ink-surface);
+  background: var(--ink-panel);
+  box-shadow: var(--ink-panel-shadow);
   border-radius: 3px;
   padding: 18px 16px;
   display: flex;
   align-items: center;
   gap: 12px;
+  height: 100%;
+  min-height: 78px;
+  box-sizing: border-box;
 }
 .home-deck .ledger-item .icon {
   display: flex;
@@ -360,10 +370,6 @@ body {
   grid-template-columns: 64px 1fr;
   gap: 22px;
   padding-bottom: 24px;
-  border-bottom: 1px solid var(--ink-hairline-soft);
-}
-.home-deck .case-step:last-child {
-  border-bottom: none;
 }
 .home-deck .case-step .n {
   font-family: 'Fraunces', serif;
@@ -387,8 +393,8 @@ body {
 
 /* certificate panel for trust slide */
 .home-deck .certificate {
-  border: 1px solid var(--ink-certificate-border);
-  background: var(--ink-surface-strong);
+  background: var(--ink-panel);
+  box-shadow: var(--ink-panel-shadow);
   border-radius: 6px;
   padding: clamp(20px, 3vw, 36px);
   display: grid;
@@ -409,10 +415,10 @@ body {
   max-width: 780px;
 }
 .home-deck details.dossier-item {
-  border: 1px solid var(--ink-hairline);
   border-radius: 3px;
   padding: 16px 20px;
-  background: var(--ink-surface);
+  background: var(--ink-panel);
+  box-shadow: var(--ink-panel-shadow);
 }
 .home-deck details.dossier-item summary {
   cursor: pointer;
@@ -504,21 +510,27 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--ink-border);
   background: var(--ink-toggle-bg);
+  box-shadow: var(--ink-panel-shadow);
   color: var(--ink-fg);
   cursor: pointer;
-  transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+  transition: transform 0.25s ease, background 0.25s ease;
   backdrop-filter: blur(6px);
 }
 .home-theme-toggle:hover {
   transform: translateY(-2px);
   background: var(--ink-toggle-bg-hover);
-  border-color: var(--ink-border-strong);
 }
 .home-theme-toggle:focus-visible {
-  outline: 2px solid var(--ink-gold);
-  outline-offset: 2px;
+  outline: none;
+  background: var(--ink-toggle-bg-hover);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 900px) and (min-width: 641px) {
+  .home-deck .ledger-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 640px) {

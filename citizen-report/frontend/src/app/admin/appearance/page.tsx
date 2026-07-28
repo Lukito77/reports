@@ -115,7 +115,7 @@ export default function AppearancePage() {
             type="color"
             value={form.theme.brand600}
             onChange={(e) => applyPrimary(e.target.value)}
-            className="h-10 w-16 cursor-pointer rounded border border-slate-300"
+            className="h-10 w-16 cursor-pointer rounded"
           />
           <div className="flex gap-1">
             {['#1d4ed8', '#0891b2', '#059669', '#7c3aed', '#db2777', '#ea580c', '#dc2626', '#0f172a'].map(
@@ -123,7 +123,7 @@ export default function AppearancePage() {
                 <button
                   key={c}
                   onClick={() => applyPrimary(c)}
-                  className="h-8 w-8 rounded-full border border-slate-200"
+                  className="h-8 w-8 rounded-full"
                   style={{ backgroundColor: c }}
                   aria-label={c}
                 />
@@ -143,7 +143,7 @@ export default function AppearancePage() {
                 type="color"
                 value={String(form.theme[field.key])}
                 onChange={(e) => setTheme({ [field.key]: e.target.value } as Partial<Theme>)}
-                className="h-9 w-12 cursor-pointer rounded border border-slate-300"
+                className="h-9 w-12 cursor-pointer rounded"
               />
               <div className="flex-1">
                 <label className="label mb-0.5">{tr(field.ka, field.en)}</label>
@@ -272,7 +272,7 @@ export default function AppearancePage() {
               type="checkbox"
               checked={Boolean(form.layout[key])}
               onChange={(e) => setLayout({ [key]: e.target.checked } as Partial<LayoutSettings>)}
-              className="h-4 w-4 rounded border-slate-300"
+              className="h-4 w-4 rounded"
             />
             {label}
           </label>

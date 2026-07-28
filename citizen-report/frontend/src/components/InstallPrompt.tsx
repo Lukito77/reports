@@ -98,7 +98,7 @@ export function InstallPrompt() {
 
   return (
     <div className="fixed inset-x-0 top-0 z-50 px-3 pt-3 md:hidden">
-      <div className="install-banner mx-auto max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5">
+      <div className="install-banner mx-auto max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl">
         <div className="flex items-center gap-3 p-4">
           <span className="text-3xl">{settings.branding.logoEmoji}</span>
           <div className="min-w-0 flex-1">

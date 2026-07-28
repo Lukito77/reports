@@ -90,7 +90,7 @@ export function Navbar() {
         {layout.showLanguageSwitcher && (
           <button
             onClick={() => setLang(lang === 'ka' ? 'en' : 'ka')}
-            className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
+            className="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600 hover:bg-slate-200"
           >
             {lang === 'ka' ? '🇬🇧 EN' : '🇬🇪 KA'}
           </button>
@@ -100,7 +100,7 @@ export function Navbar() {
   }
 
   return (
-    <header className="border-b border-slate-200 bg-white">
+    <header className="bg-white shadow-sm">
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <Link href="/" className="flex items-center gap-2 font-semibold text-brand-700">
           <span className="text-xl">{branding.logoEmoji}</span> {branding.siteName}
@@ -122,7 +122,7 @@ export function Navbar() {
       </nav>
 
       {mobileOpen && (
-        <div className="flex flex-col items-start gap-3 border-t border-slate-200 px-4 py-4 text-sm sm:hidden">
+        <div className="flex flex-col items-start gap-3 bg-slate-50 px-4 py-4 text-sm sm:hidden">
           {renderNavItems(() => setMobileOpen(false))}
         </div>
       )}

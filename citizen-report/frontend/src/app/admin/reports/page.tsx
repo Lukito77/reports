@@ -150,7 +150,7 @@ export default function AdminReportsPage() {
             <button
               key={r.id}
               onClick={() => openReport(r.id)}
-              className={`card w-full text-left transition hover:shadow-md ${selected?.id === r.id ? 'ring-2 ring-brand-500' : ''}`}
+              className={`card w-full text-left transition hover:shadow-md ${selected?.id === r.id ? 'bg-brand-50' : ''}`}
             >
               <div className="flex items-center justify-between">
                 <span className="font-semibold">{categoryLabel(r.category, lang)}</span>
@@ -204,7 +204,7 @@ export default function AdminReportsPage() {
 
               {/* AI assistance (advisory) */}
               {selected.aiAnalyses && selected.aiAnalyses.length > 0 && (
-                <div className="rounded border border-slate-200 p-3 text-xs">
+                <div className="rounded bg-slate-50 p-3 text-xs">
                   <p className="mb-1 font-semibold text-slate-600">{t.admin.aiAssistance}</p>
                   <ul className="space-y-1 text-slate-600">
                     {selected.aiAnalyses.map((a) => (
@@ -218,7 +218,7 @@ export default function AdminReportsPage() {
               )}
 
               {/* Reviewer actions */}
-              <div className="space-y-2 border-t border-slate-200 pt-3">
+              <div className="space-y-2 pt-4">
                 <label className="label">{t.admin.reviewerNoteLabel}</label>
                 <textarea className="input min-h-16" value={note} onChange={(e) => setNote(e.target.value)} />
                 <div className="flex flex-wrap gap-2">
@@ -229,7 +229,7 @@ export default function AdminReportsPage() {
                   <button className="btn-secondary" onClick={() => changeStatus('CLOSED')}>{t.admin.close}</button>
                 </div>
                 {user?.role === 'ADMIN' && (
-                  <div className="border-t border-slate-200 pt-3">
+                  <div className="pt-3">
                     <button className="btn-primary bg-red-700 hover:bg-red-800" onClick={deleteReport}>
                       {t.admin.deletePermanently}
                     </button>

@@ -162,7 +162,7 @@ export default function CollectionDetailPage() {
 
       <div className="card overflow-x-auto p-0">
         <table className="w-full text-left text-sm">
-          <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+          <thead className="bg-slate-50 text-xs uppercase text-slate-500">
             <tr>
               {columns.map((c) => (
                 <th key={c} className="whitespace-nowrap px-3 py-2 font-medium">
@@ -174,7 +174,7 @@ export default function CollectionDetailPage() {
           </thead>
           <tbody>
             {data?.items.map((doc, i) => (
-              <tr key={String(doc.id) || i} className="border-b border-slate-100 hover:bg-slate-50">
+              <tr key={String(doc.id) || i} className="even:bg-slate-50/60 hover:bg-slate-100">
                 {columns.map((c) => (
                   <td key={c} className="max-w-[220px] truncate px-3 py-2" title={cellValue(doc[c])}>
                     {cellValue(doc[c])}

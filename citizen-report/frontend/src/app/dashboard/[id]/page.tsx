@@ -74,26 +74,26 @@ export default function ReportDetailPage() {
         )}
 
         {report.status === 'APPROVED' && (
-          <div className="mt-4 rounded border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+          <div className="mt-4 rounded bg-green-50 p-3 text-sm text-green-800">
             <strong>{t.reportDetail.approvedTitle}</strong> {t.reportDetail.approvedRest}
             {report.reviewerNote && <p className="mt-1">{t.reportDetail.reviewerNote} {report.reviewerNote}</p>}
           </div>
         )}
 
         {report.status === 'REJECTED' && (
-          <div className="mt-4 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+          <div className="mt-4 rounded bg-red-50 p-3 text-sm text-red-800">
             <strong>{t.reportDetail.rejectedTitle}</strong>
             {report.reviewerNote && <p className="mt-1">{t.reportDetail.reason} {report.reviewerNote}</p>}
           </div>
         )}
 
         {report.status === 'INFO_REQUESTED' && report.reviewerNote && (
-          <div className="mt-4 rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          <div className="mt-4 rounded bg-amber-50 p-3 text-sm text-amber-800">
             <strong>{t.reportDetail.infoRequested}</strong> {report.reviewerNote}
           </div>
         )}
 
-        <div className="mt-4 border-t border-slate-200 pt-3">
+        <div className="mt-5 pt-3">
           <button
             className="btn-primary bg-red-600 hover:bg-red-700"
             onClick={deleteReport}

@@ -30,7 +30,7 @@ export function RememberedEmails({ onPick }: { onPick: (email: string) => void }
           {emails.map((e) => (
             <span
               key={e}
-              className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 py-0.5 pl-2 pr-1 text-xs text-slate-600"
+              className="inline-flex items-center gap-1 rounded-full bg-slate-100 py-0.5 pl-2 pr-1 text-xs text-slate-600"
             >
               <button
                 type="button"
